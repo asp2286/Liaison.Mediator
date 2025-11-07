@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34316.72
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liaison.Mediator", "src\\Liaison.Mediator\\Liaison.Mediator.csproj", "{3C01DCA8-3528-4EEF-9A45-A7D7CDB814B9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liaison.Mediator.Tests", "tests\\Liaison.Mediator.Tests\\Liaison.Mediator.Tests.csproj", "{ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {3C01DCA8-3528-4EEF-9A45-A7D7CDB814B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {3C01DCA8-3528-4EEF-9A45-A7D7CDB814B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {3C01DCA8-3528-4EEF-9A45-A7D7CDB814B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {3C01DCA8-3528-4EEF-9A45-A7D7CDB814B9}.Release|Any CPU.Build.0 = Release|Any CPU
+        {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+EndGlobal
