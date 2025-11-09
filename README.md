@@ -27,6 +27,11 @@ var result = await mediator.Send(new AddTodo("Write docs"));
 await mediator.Publish(new TodoAdded(result.Id));
 ```
 
+## Release flow
+
+- **Stable** – Tag the desired commit with the semantic version (for example `1.2.3`) and push the tag to publish the exact build.
+- **Release candidates** – Every push to `master` emits `-rc.*` packages. Include `[minor]` or `[major]` in the commit message to bump the respective version component before the prerelease is generated.
+
 ## Project layout
 
 - `src/Liaison.Mediator` – Library source, including interfaces like [`IMediator`](src/Liaison.Mediator/IMediator.cs) and the [`MediatorBuilder`](src/Liaison.Mediator/MediatorBuilder.cs).
