@@ -47,9 +47,11 @@ jobs:
         run: dotnet build -c Release
 
       - name: Pack
-        run: dotnet pack -c Release -o artifacts \
-             -p:PackageVersion=${{ env.PKG_VERSION }} \
-             -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+        run: |
+          dotnet pack -c Release -o artifacts \
+            -p:PackageVersion=${{ env.PKG_VERSION }} \
+            -p:IncludeSymbols=true \
+            -p:SymbolPackageFormat=snupkg
 
       - name: Publish to nuget.org (Trusted Publishing)
         env:
