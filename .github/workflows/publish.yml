@@ -48,7 +48,9 @@ jobs:
 
       - name: Pack
         run: |
-          dotnet pack -c Release -o artifacts \
+          dotnet pack src/Liaison.Mediator/Liaison.Mediator.csproj \
+            -c Release \
+            -o artifacts \
             -p:PackageVersion=${{ env.PKG_VERSION }} \
             -p:IncludeSymbols=true \
             -p:SymbolPackageFormat=snupkg
