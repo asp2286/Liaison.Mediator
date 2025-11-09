@@ -55,14 +55,11 @@ jobs:
             -p:IncludeSymbols=true \
             -p:SymbolPackageFormat=snupkg
 
-      - name: Login to NuGet.org
-        id: nuget_login
+      - name: NuGet Login
         uses: NuGet/login@v1
+        id: nuget_login
         with:
-          package-owner: asp2286
-          repository-owner: ${{ github.repository_owner }}
-          repository: ${{ github.event.repository.name }}
-          workflow: publish.yml
+          user: asp2286
 
       - name: Publish to nuget.org (Trusted Publishing)
-        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget_login.outputs.apikey }} --skip-duplicate
+        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --skip-duplicate
