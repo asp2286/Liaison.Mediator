@@ -46,6 +46,17 @@ var result = await mediator.Send(new AddTodo("Write docs"));
 await mediator.Publish(new TodoAdded(result.Id));
 ```
 
+## Samples
+
+Clone the repository and run the sample projects to see the mediator in action with real request and notification types.
+
+| Sample | Demonstrates | Run it |
+| --- | --- | --- |
+| **ManualBuilderSample** | Building an `IMediator` instance manually and registering handlers without DI. | `dotnet run --project samples/ManualBuilderSample` |
+| **DependencyInjectionSample** | Wiring handlers with `IServiceCollection` and requesting `IMediator` from the container. | `dotnet run --project samples/DependencyInjectionSample` |
+
+Each sample writes its output to the console so you can verify handler execution.
+
 ## Release flow
 
 - **Stable** – Tag the desired commit with the semantic version (for example `1.2.3`) and push the tag to publish the exact build.
