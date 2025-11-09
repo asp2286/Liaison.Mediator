@@ -1,40 +1,57 @@
-name: Publish package
+name: publish
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    branches: [ master ]                # RC builds
+    tags: ['[0-9]+.[0-9]+.[0-9]+']      # stable builds (e.g., 1.2.3)
 
 permissions:
   contents: read
-  id-token: write
+  id-token: write                       # keep if using NuGet Trusted Publishing (OIDC)
 
 jobs:
-  publish:
+  pack_and_publish:
     runs-on: ubuntu-latest
-
+    environment: nuget
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }        # we need tags
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+      - name: Compute SemVer
+        id: v
+        shell: bash
+        run: |
+          set -e
+          # last tag like 1.2.3; default 0.1.0
+          LAST_TAG=$(git describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo 0.1.0)
+          IFS=. read -r MA MI PA <<< "$LAST_TAG"
 
-      - name: Restore dependencies
-        run: dotnet restore
+          # optional bump hints in commit messages: [major] / [minor]
+          MSG=$(git log -1 --pretty=%B)
+          if [[ "$MSG" == *"[major]"* ]]; then MA=$((MA+1)); MI=0; PA=0
+          elif [[ "$MSG" == *"[minor]"* ]]; then MI=$((MI+1)); PA=0
+          else PA=$((PA+1)); fi
+
+          if [[ "${GITHUB_REF}" =~ refs/tags/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            PKG_VERSION="${BASH_REMATCH[1]}"                        # stable
+          else
+            PKG_VERSION="$MA.$MI.$PA-rc.${GITHUB_RUN_NUMBER}"       # RC on master
+          fi
+
+          echo "PKG_VERSION=$PKG_VERSION" | tee -a $GITHUB_ENV
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build -c Release
 
       - name: Pack
-        run: dotnet pack --configuration Release --no-build --output ./artifacts
+        run: dotnet pack -c Release -o artifacts \
+             -p:PackageVersion=${{ env.PKG_VERSION }} \
+             -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
-      - name: Authenticate with NuGet.org (trusted publishing)
-        uses: NuGet/setup-nuget@v1
-        with:
-          source-url: https://api.nuget.org/v3/index.json
-
-      - name: Publish package to NuGet.org
-        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_AUTH_TOKEN" --skip-duplicate
+      - name: Publish to nuget.org (Trusted Publishing)
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_AUTH_TOKEN }}
+        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $NUGET_AUTH_TOKEN --skip-duplicate
