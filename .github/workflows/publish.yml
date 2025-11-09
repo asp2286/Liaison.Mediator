@@ -2,7 +2,7 @@ name: publish
 
 on:
   push:
-    branches: [ master ]                # RC builds
+    branches: [ main ]                # RC builds
     tags: ['[0-9]+.[0-9]+.[0-9]+']      # stable builds (e.g., 1.2.3)
 
 permissions:
