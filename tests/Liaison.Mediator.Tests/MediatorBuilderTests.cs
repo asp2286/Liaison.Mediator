@@ -131,6 +131,7 @@ public class MediatorBuilderTests
             {
                 Invoked = true;
                 _steps?.Add("handler");
+
                 return Task.FromResult($"{request.Message} pong");
             }
         }
@@ -147,6 +148,7 @@ public class MediatorBuilderTests
         public Task Handle(TestNotification notification, CancellationToken cancellationToken)
         {
             _notifications.Add(notification);
+
             return Task.CompletedTask;
         }
     }
@@ -160,6 +162,7 @@ public class MediatorBuilderTests
             public Task<Unit> Handle(VoidRequest request, CancellationToken cancellationToken)
             {
                 Invoked = true;
+
                 return Task.FromResult(Unit.Value);
             }
         }
@@ -182,8 +185,9 @@ public class MediatorBuilderTests
             CancellationToken cancellationToken)
         {
             _steps.Add($"{_name} before");
-            var response = await next(cancellationToken).ConfigureAwait(false);
+            var response = await next().ConfigureAwait(false);
             _steps.Add($"{_name} after");
+
             return response;
         }
     }

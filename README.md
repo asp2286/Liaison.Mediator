@@ -8,14 +8,14 @@ Liaison.Mediator is a lightweight mediator library for .NET that keeps the famil
 - **Request/response messaging** – Define requests by implementing `IRequest<TResult>` and handle them through `IRequestHandler<TRequest, TResult>` implementations.
 - **Notifications** – Broadcast one-way messages by implementing `INotification` and attaching one or more `INotificationHandler<TNotification>` instances.
 - **Unit result helper** – Return `Unit.Value` from commands that do not need to return data.
-- **Microsoft.Extensions.DependencyInjection integration** – Call `AddMediator` to discover handlers and pipeline behaviors through dependency injection.
+- **Microsoft.Extensions.DependencyInjection integration** – Wire `IMediator` into `IServiceCollection` and let DI construct handlers (optional assembly-scanning overload available).
 
 ## Getting started
 
 1. Install the `Liaison.Mediator` package from NuGet.
 2. Choose the registration style that fits your app:
    - Build an `IMediator` manually with `MediatorBuilder` for full control over handler wiring.
-   - Register handlers with Microsoft.Extensions.DependencyInjection using `AddMediator` and let the container construct them.
+   - Register handlers with Microsoft.Extensions.DependencyInjection, then call `AddMediator` to let the container construct them.
 3. Define your request/notification types and handlers, then start sending messages.
 
 ### Manual builder usage
@@ -23,8 +23,8 @@ Liaison.Mediator is a lightweight mediator library for .NET that keeps the famil
 ```csharp
 var builder = new MediatorBuilder();
 
-builder.AddRequestHandler<AddTodo, Todo>(new AddTodoHandler())
-       .AddNotificationHandler<TodoAdded>(new TodoAddedHandler());
+builder.RegisterRequestHandler<AddTodo, Todo>(new AddTodoHandler())
+       .RegisterNotificationHandler<TodoAdded>(new TodoAddedHandler());
 
 IMediator mediator = builder.Build();
 
@@ -37,7 +37,10 @@ await mediator.Publish(new TodoAdded(result.Id));
 ```csharp
 var services = new ServiceCollection();
 
-services.AddMediator(typeof(AddTodoHandler).Assembly);
+services.AddScoped<IRequestHandler<AddTodo, Todo>, AddTodoHandler>();
+services.AddScoped<INotificationHandler<TodoAdded>, TodoAddedHandler>();
+
+services.AddMediator();
 
 using ServiceProvider provider = services.BuildServiceProvider();
 IMediator mediator = provider.GetRequiredService<IMediator>();

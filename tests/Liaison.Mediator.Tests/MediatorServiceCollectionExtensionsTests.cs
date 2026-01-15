@@ -33,6 +33,31 @@ public class MediatorServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public async Task AddMediator_WithoutAssemblies_UsesAlreadyRegisteredHandlers()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<State>();
+        services.AddTransient<IRequestHandler<SampleRequest, int>, SampleRequestHandler>();
+        services.AddTransient<IPipelineBehavior<SampleRequest, int>, SamplePipeline>();
+        services.AddTransient<INotificationHandler<SampleNotification>, SampleNotificationHandler>();
+        services.AddMediator();
+
+        await using var provider = services.BuildServiceProvider();
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        var response = await mediator.Send(new SampleRequest(5));
+
+        Assert.Equal(6, response);
+
+        var state = provider.GetRequiredService<State>();
+        Assert.Equal(new[] { "pipeline before", "handler", "pipeline after" }, state.Events);
+
+        await mediator.Publish(new SampleNotification("notification"));
+
+        Assert.Equal(new[] { "notification" }, state.Notifications);
+    }
+
+    [Fact]
     public void AddMediator_WithNullAssemblies_Throws()
     {
         var services = new ServiceCollection();
@@ -71,6 +96,7 @@ file sealed class SampleRequestHandler : IRequestHandler<SampleRequest, int>
     public Task<int> Handle(SampleRequest request, CancellationToken cancellationToken)
     {
         _state.Events.Add("handler");
+
         return Task.FromResult(request.Value + 1);
     }
 }
@@ -90,8 +116,9 @@ file sealed class SamplePipeline : IPipelineBehavior<SampleRequest, int>
         CancellationToken cancellationToken)
     {
         _state.Events.Add("pipeline before");
-        var response = await next(cancellationToken).ConfigureAwait(false);
+        var response = await next().ConfigureAwait(false);
         _state.Events.Add("pipeline after");
+
         return response;
     }
 }
@@ -110,6 +137,7 @@ file sealed class SampleNotificationHandler : INotificationHandler<SampleNotific
     public Task Handle(SampleNotification notification, CancellationToken cancellationToken)
     {
         _state.Notifications.Add(notification.Value);
+
         return Task.CompletedTask;
     }
 }

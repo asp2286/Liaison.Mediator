@@ -38,6 +38,7 @@ public sealed class MediatorBuilder
         }
 
         _requestHandlers[requestType] = new RequestHandlerWrapper<TRequest, TResponse>(handler);
+
         return this;
     }
 
@@ -63,6 +64,7 @@ public sealed class MediatorBuilder
         }
 
         handlers.Add(new NotificationHandlerWrapper<TNotification>(handler));
+
         return this;
     }
 
@@ -89,6 +91,7 @@ public sealed class MediatorBuilder
         }
 
         behaviors.Add(new PipelineBehaviorWrapper<TRequest, TResponse>(behavior));
+
         return this;
     }
 
@@ -126,6 +129,7 @@ public sealed class MediatorBuilder
             }
 
             var response = await _handler.Handle(typedRequest, cancellationToken).ConfigureAwait(false);
+
             return response;
         }
     }
@@ -168,9 +172,9 @@ public sealed class MediatorBuilder
                 throw new ArgumentException($"Request must be of type {typeof(TRequest)}.", nameof(request));
             }
 
-            async Task<TResponse> TypedNext(CancellationToken ct)
+            async Task<TResponse> TypedNext()
             {
-                var response = await next(ct).ConfigureAwait(false);
+                var response = await next(cancellationToken).ConfigureAwait(false);
                 if (response is null)
                 {
                     if (default(TResponse) is null)
@@ -186,6 +190,7 @@ public sealed class MediatorBuilder
             }
 
             var result = await _behavior.Handle(typedRequest, TypedNext, cancellationToken).ConfigureAwait(false);
+
             return result;
         }
     }

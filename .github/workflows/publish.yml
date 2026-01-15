@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }        # we need tags
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: '8.0.x' }
+        with: { dotnet-version: '10.0.x' }
 
       - name: Compute SemVer
         id: v
