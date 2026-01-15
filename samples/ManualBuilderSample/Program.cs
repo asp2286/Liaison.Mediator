@@ -2,8 +2,8 @@ using Liaison.Mediator;
 
 var builder = new MediatorBuilder();
 
-builder.AddRequestHandler<AddTodo, Todo>(new AddTodoHandler())
-       .AddNotificationHandler<TodoAdded>(new TodoAddedHandler());
+builder.RegisterRequestHandler<AddTodo, Todo>(new AddTodoHandler())
+       .RegisterNotificationHandler<TodoAdded>(new TodoAddedHandler());
 
 IMediator mediator = builder.Build();
 
@@ -23,6 +23,7 @@ public sealed class AddTodoHandler : IRequestHandler<AddTodo, Todo>
     public Task<Todo> Handle(AddTodo request, CancellationToken cancellationToken)
     {
         var todo = new Todo(_nextId++, request.Title);
+
         return Task.FromResult(todo);
     }
 }
@@ -34,6 +35,7 @@ public sealed class TodoAddedHandler : INotificationHandler<TodoAdded>
     public Task Handle(TodoAdded notification, CancellationToken cancellationToken)
     {
         Console.WriteLine($"Observed todo #{notification.Id}: {notification.Title}");
+
         return Task.CompletedTask;
     }
 }

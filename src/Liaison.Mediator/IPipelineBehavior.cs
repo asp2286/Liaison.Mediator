@@ -24,5 +24,4 @@ public interface IPipelineBehavior<TRequest, TResponse>
 /// Delegate representing the continuation to the next behavior or the request handler.
 /// </summary>
 /// <typeparam name="TResponse">Type of the response produced by the handler.</typeparam>
-/// <param name="cancellationToken">Token used to observe cancellation.</param>
-public delegate Task<TResponse> RequestHandlerDelegate<TResponse>(CancellationToken cancellationToken);
+public delegate Task<TResponse> RequestHandlerDelegate<TResponse>();

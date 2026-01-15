@@ -3,10 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 var services = new ServiceCollection();
 
-services.AddMediator(typeof(AddTodoHandler).Assembly);
 services.AddSingleton<TodoRepository>();
-services.AddScoped<AddTodoHandler>();
-services.AddScoped<TodoAddedHandler>();
+services.AddScoped<IRequestHandler<AddTodo, Todo>, AddTodoHandler>();
+services.AddScoped<INotificationHandler<TodoAdded>, TodoAddedHandler>();
+services.AddMediator();
 
 await using ServiceProvider provider = services.BuildServiceProvider();
 IMediator mediator = provider.GetRequiredService<IMediator>();
@@ -40,6 +40,7 @@ public sealed class TodoAddedHandler : INotificationHandler<TodoAdded>
     public Task Handle(TodoAdded notification, CancellationToken cancellationToken)
     {
         Console.WriteLine($"Observed todo #{notification.Id}: {notification.Title}");
+
         return Task.CompletedTask;
     }
 }

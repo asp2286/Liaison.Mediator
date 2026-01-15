@@ -1,6 +1,6 @@
 # Liaison.Mediator
 
-Liaison.Mediator is a lightweight mediator library that keeps the familiar request/response and notification patterns of MediatR while removing assembly scanning. Register handlers explicitly or opt into dependency injection support via `AddMediator`.
+Liaison.Mediator is a lightweight mediator library that keeps the familiar request/response and notification patterns of MediatR while making handler registration explicit by default. You can also wire it into Microsoft.Extensions.DependencyInjection via `AddMediator`.
 
 ## Installation
 
@@ -15,8 +15,8 @@ Install-Package Liaison.Mediator
 ```csharp
 var builder = new MediatorBuilder();
 
-builder.AddRequestHandler<CreateOrder, Order>(new CreateOrderHandler())
-       .AddNotificationHandler<OrderCreated>(new OrderCreatedHandler());
+builder.RegisterRequestHandler<CreateOrder, Order>(new CreateOrderHandler())
+       .RegisterNotificationHandler<OrderCreated>(new OrderCreatedHandler());
 
 IMediator mediator = builder.Build();
 ```
@@ -25,7 +25,9 @@ IMediator mediator = builder.Build();
 
 ```csharp
 var services = new ServiceCollection();
-services.AddMediator(typeof(CreateOrderHandler).Assembly);
+services.AddScoped<IRequestHandler<CreateOrder, Order>, CreateOrderHandler>();
+services.AddScoped<INotificationHandler<OrderCreated>, OrderCreatedHandler>();
+services.AddMediator();
 
 await using ServiceProvider provider = services.BuildServiceProvider();
 IMediator mediator = provider.GetRequiredService<IMediator>();
