@@ -14,11 +14,15 @@ internal sealed class ServiceProviderMediator : IMediator
     private readonly INotificationPublisher _notificationPublisher;
     private readonly ConcurrentDictionary<Type, IRequestHandlerWrapper> _requestHandlerWrappers = new();
     private readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> _notificationHandlerWrappers = new();
+    private readonly Func<Type, IRequestHandlerWrapper> _createRequestHandlerWrapper;
+    private readonly Func<Type, INotificationHandlerWrapper> _createNotificationHandlerWrapper;
 
     public ServiceProviderMediator(IServiceProvider serviceProvider, INotificationPublisher notificationPublisher)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
+        _createRequestHandlerWrapper = CreateRequestHandlerWrapper;
+        _createNotificationHandlerWrapper = CreateNotificationHandlerWrapper;
     }
 
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
@@ -29,7 +33,7 @@ internal sealed class ServiceProviderMediator : IMediator
         }
 
         var requestType = request.GetType();
-        var wrapper = _requestHandlerWrappers.GetOrAdd(requestType, CreateRequestHandlerWrapper);
+        var wrapper = _requestHandlerWrappers.GetOrAdd(requestType, _createRequestHandlerWrapper);
         var response = await wrapper.Handle(request, cancellationToken).ConfigureAwait(false);
 
         if (response is null)
@@ -61,7 +65,7 @@ internal sealed class ServiceProviderMediator : IMediator
         }
 
         var notificationType = notification.GetType();
-        var wrapper = _notificationHandlerWrappers.GetOrAdd(notificationType, CreateNotificationHandlerWrapper);
+        var wrapper = _notificationHandlerWrappers.GetOrAdd(notificationType, _createNotificationHandlerWrapper);
 
         return wrapper.Handle(notification, cancellationToken);
     }
@@ -101,10 +105,13 @@ internal sealed class ServiceProviderMediator : IMediator
         where TRequest : IRequest<TResponse>
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly bool _hasPipelineBehaviors;
 
         public ServiceProviderRequestHandlerWrapper(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            EnsureExactlyOneHandler(serviceProvider);
+            _hasPipelineBehaviors = HasPipelineBehaviors(serviceProvider);
         }
 
         public async Task<object?> Handle(object request, CancellationToken cancellationToken)
@@ -114,32 +121,97 @@ internal sealed class ServiceProviderMediator : IMediator
                 throw new ArgumentException($"Request must be of type {typeof(TRequest)}.", nameof(request));
             }
 
-            var handlers = _serviceProvider.GetServices<IRequestHandler<TRequest, TResponse>>().ToArray();
-            if (handlers.Length == 0)
+            var handler = _serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
+            if (!_hasPipelineBehaviors)
+            {
+                return await handler.Handle(typedRequest, cancellationToken).ConfigureAwait(false);
+            }
+
+            var behaviorEnumerable = _serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>();
+            var behaviors = behaviorEnumerable as IPipelineBehavior<TRequest, TResponse>[] ?? behaviorEnumerable.ToArray();
+            if (behaviors.Length == 0)
+            {
+                return await handler.Handle(typedRequest, cancellationToken).ConfigureAwait(false);
+            }
+
+            var execution = new PipelineExecution(typedRequest, cancellationToken, handler, behaviors);
+            return await execution.Next().ConfigureAwait(false);
+        }
+
+        private static void EnsureExactlyOneHandler(IServiceProvider serviceProvider)
+        {
+            var handlerEnumerable = serviceProvider.GetServices<IRequestHandler<TRequest, TResponse>>();
+            if (handlerEnumerable is IRequestHandler<TRequest, TResponse>[] handlerArray)
+            {
+                if (handlerArray.Length == 0)
+                {
+                    throw new InvalidOperationException($"No handler registered for request type '{typeof(TRequest).FullName}'.");
+                }
+
+                if (handlerArray.Length > 1)
+                {
+                    throw new InvalidOperationException($"Multiple handlers registered for request type '{typeof(TRequest).FullName}'.");
+                }
+
+                return;
+            }
+
+            using var enumerator = handlerEnumerable.GetEnumerator();
+            if (!enumerator.MoveNext())
             {
                 throw new InvalidOperationException($"No handler registered for request type '{typeof(TRequest).FullName}'.");
             }
 
-            if (handlers.Length > 1)
+            if (enumerator.MoveNext())
             {
                 throw new InvalidOperationException($"Multiple handlers registered for request type '{typeof(TRequest).FullName}'.");
             }
+        }
 
-            var handler = handlers[0];
-            var behaviors = _serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>().ToArray();
-
-            RequestHandlerDelegate<TResponse> next = () => handler.Handle(typedRequest, cancellationToken);
-
-            for (var i = behaviors.Length - 1; i >= 0; i--)
+        private static bool HasPipelineBehaviors(IServiceProvider serviceProvider)
+        {
+            var behaviorsEnumerable = serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>();
+            if (behaviorsEnumerable is IPipelineBehavior<TRequest, TResponse>[] behaviorsArray)
             {
-                var behavior = behaviors[i];
-                var continuation = next;
-                next = () => behavior.Handle(typedRequest, continuation, cancellationToken);
+                return behaviorsArray.Length > 0;
             }
 
-            var response = await next().ConfigureAwait(false);
+            using var enumerator = behaviorsEnumerable.GetEnumerator();
+            return enumerator.MoveNext();
+        }
 
-            return response;
+        private sealed class PipelineExecution
+        {
+            private readonly TRequest _request;
+            private readonly CancellationToken _cancellationToken;
+            private readonly IRequestHandler<TRequest, TResponse> _handler;
+            private readonly IPipelineBehavior<TRequest, TResponse>[] _behaviors;
+            private int _nextIndex;
+            private readonly RequestHandlerDelegate<TResponse> _next;
+
+            public PipelineExecution(
+                TRequest request,
+                CancellationToken cancellationToken,
+                IRequestHandler<TRequest, TResponse> handler,
+                IPipelineBehavior<TRequest, TResponse>[] behaviors)
+            {
+                _request = request;
+                _cancellationToken = cancellationToken;
+                _handler = handler;
+                _behaviors = behaviors;
+                _next = Next;
+            }
+
+            public Task<TResponse> Next()
+            {
+                var index = _nextIndex++;
+                if (index < _behaviors.Length)
+                {
+                    return _behaviors[index].Handle(_request, _next, _cancellationToken);
+                }
+
+                return _handler.Handle(_request, _cancellationToken);
+            }
         }
     }
 
@@ -148,11 +220,13 @@ internal sealed class ServiceProviderMediator : IMediator
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly INotificationPublisher _notificationPublisher;
+        private readonly NotificationPublisherKind _publisherKind;
 
         public ServiceProviderNotificationHandlerWrapper(IServiceProvider serviceProvider, INotificationPublisher notificationPublisher)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
+            _publisherKind = NotificationPublisherKindResolver.Get(notificationPublisher);
         }
 
         public Task Handle(object notification, CancellationToken cancellationToken)
@@ -162,18 +236,104 @@ internal sealed class ServiceProviderMediator : IMediator
                 throw new ArgumentException($"Notification must be of type {typeof(TNotification)}.", nameof(notification));
             }
 
-            var handlers = _serviceProvider.GetServices<INotificationHandler<TNotification>>().ToArray();
+            var handlerEnumerable = _serviceProvider.GetServices<INotificationHandler<TNotification>>();
+            var handlers = handlerEnumerable as INotificationHandler<TNotification>[] ?? handlerEnumerable.ToArray();
             if (handlers.Length == 0)
             {
                 return Task.CompletedTask;
             }
 
-            var executors = handlers.Select(handler =>
-                new NotificationHandlerExecutor(
-                    handler,
-                    (not, ct) => handler.Handle((TNotification)not, ct)));
-
-            return _notificationPublisher.Publish(executors, typedNotification, cancellationToken);
+            return _publisherKind switch
+            {
+                NotificationPublisherKind.ForeachAwait => PublishForeachAwait(handlers, typedNotification, cancellationToken),
+                NotificationPublisherKind.TaskWhenAll => PublishTaskWhenAll(handlers, typedNotification, cancellationToken),
+                _ => PublishWithPublisher(handlers, typedNotification, cancellationToken),
+            };
         }
+
+        private static Task PublishForeachAwait(
+            INotificationHandler<TNotification>[] handlers,
+            TNotification notification,
+            CancellationToken cancellationToken)
+        {
+            for (var i = 0; i < handlers.Length; i++)
+            {
+                var task = handlers[i].Handle(notification, cancellationToken);
+                if (task.Status != TaskStatus.RanToCompletion)
+                {
+                    return PublishForeachAwaitSlow(i, task, handlers, notification, cancellationToken);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private static async Task PublishForeachAwaitSlow(
+            int startIndex,
+            Task firstTask,
+            INotificationHandler<TNotification>[] handlers,
+            TNotification notification,
+            CancellationToken cancellationToken)
+        {
+            await firstTask.ConfigureAwait(false);
+            for (var i = startIndex + 1; i < handlers.Length; i++)
+            {
+                await handlers[i].Handle(notification, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private static Task PublishTaskWhenAll(
+            INotificationHandler<TNotification>[] handlers,
+            TNotification notification,
+            CancellationToken cancellationToken)
+        {
+            if (handlers.Length == 1)
+            {
+                return handlers[0].Handle(notification, cancellationToken);
+            }
+
+            var tasks = new Task[handlers.Length];
+            for (var i = 0; i < handlers.Length; i++)
+            {
+                tasks[i] = handlers[i].Handle(notification, cancellationToken);
+            }
+
+            return Task.WhenAll(tasks);
+        }
+
+        private Task PublishWithPublisher(
+            INotificationHandler<TNotification>[] handlers,
+            TNotification notification,
+            CancellationToken cancellationToken)
+        {
+            var executors = new NotificationHandlerExecutor[handlers.Length];
+            for (var i = 0; i < handlers.Length; i++)
+            {
+                var handler = handlers[i];
+                executors[i] = new NotificationHandlerExecutor(
+                    handler,
+                    (not, ct) => handler.Handle((TNotification)not, ct));
+            }
+
+            return _notificationPublisher.Publish(executors, notification, cancellationToken);
+        }
+    }
+
+    private enum NotificationPublisherKind
+    {
+        Other = 0,
+        ForeachAwait = 1,
+        TaskWhenAll = 2,
+    }
+
+    private static class NotificationPublisherKindResolver
+    {
+        public static NotificationPublisherKind Get(INotificationPublisher publisher)
+            => publisher switch
+            {
+                ForeachAwaitNotificationPublisher => NotificationPublisherKind.ForeachAwait,
+                TaskWhenAllNotificationPublisher => NotificationPublisherKind.TaskWhenAll,
+                _ => NotificationPublisherKind.Other,
+            };
     }
 }
