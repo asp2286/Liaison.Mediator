@@ -1,6 +1,6 @@
 # Benchmarks
 
-The benchmark suite lives in `benchmarks/Liaison.Mediator.Benchmarks` and uses BenchmarkDotNet. Commit only the generated summaries under `benchmarks/results/**` (not `BenchmarkDotNet.Artifacts`).
+The benchmark suite lives in `benchmarks/Liaison.Mediator.Benchmarks` and uses BenchmarkDotNet. Commit only `benchmarks/results/**` and the root `README.md` (not `BenchmarkDotNet.Artifacts`).
 
 ## Run benchmarks
 
@@ -12,7 +12,7 @@ dotnet run -c Release --project benchmarks/Liaison.Mediator.Benchmarks --framewo
 
 BenchmarkDotNet writes results to `BenchmarkDotNet.Artifacts/results` by default.
 
-## Generate and commit summaries
+## Generate summaries
 
 Run the summary generator (example: Windows/Ryzen baseline):
 
@@ -31,7 +31,28 @@ This writes:
 - `benchmarks/results/<machine>/latest.summary.json`
 - `benchmarks/results/<machine>/latest.summary.md`
 
-Commit both files and (optionally) update the root `README.md` tables if you keep them in sync.
+## Update root README.md
+
+The root `README.md` benchmarks block is auto-generated from the committed JSON summaries.
+
+```bash
+dotnet run --project benchmarks/tools/Benchmarks.ReadmeUpdater -- \
+  --readme "README.md" \
+  --ryzen "benchmarks/results/ryzen-win11/latest.summary.json" \
+  --apple "benchmarks/results/apple-m3-macos/latest.summary.json" \
+  --rpi "benchmarks/results/rpi5-linux/latest.summary.json"
+```
+
+If `--apple` or `--rpi` points to a missing file, those table columns show `N/A`.
+
+## Commit policy
+
+Commit only:
+
+- `benchmarks/results/**`
+- `README.md`
+
+Do not commit `BenchmarkDotNet.Artifacts/**`.
 
 ## Per-machine examples
 

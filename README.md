@@ -70,57 +70,35 @@ Each sample writes its output to the console so you can verify handler execution
 - `src/Liaison.Mediator` – Library source, including interfaces like [`IMediator`](src/Liaison.Mediator/IMediator.cs) and the [`MediatorBuilder`](src/Liaison.Mediator/MediatorBuilder.cs).
 - `tests/Liaison.Mediator.Tests` – xUnit test project with coverage for core scenarios.
 
-## Benchmarks (Win11 Pro / Ryzen 9 7940HS as the primary baseline)
+<!-- BENCHMARKS:BEGIN -->
+## Benchmarks
 
-BenchmarkDotNet runs are summarized into committed files under `benchmarks/results/**` so results are reproducible and easy to review.
+Primary baseline: Windows 11 Pro / Ryzen 9 7940HS.
 
-Baseline summary files (commit these after running locally):
+| Scenario | Runtime | MediatR Mean | Liaison Mean | Speedup | MediatR Alloc (B/op) | Liaison Alloc (B/op) | Alloc Reduction |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Send_DI/Send | net8.0 | 97.91 ns | 160.02 ns | x0.61 | 312 | 440 | -41% |
+| Send_DI_Pipeline/Send (BehaviorCount=1) | net8.0 | 131.2 ns | 189.7 ns | x0.69 | 448 | 576 | -29% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | net8.0 | 163.7 ns | 195.6 ns | x0.84 | 560 | 688 | -23% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | net8.0 | 200.4 ns | 226.4 ns | x0.89 | 896 | 1024 | -14% |
+| Send_SingleHandler/Send | net8.0 | 99.92 ns | 71.71 ns | x1.39 | 312 | 272 | 13% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | net8.0 | 92.03 ns | 33.56 ns | x2.74 | 392 | 32 | 92% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | net8.0 | 145.5 ns | 44.36 ns | x3.28 | 776 | 32 | 96% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | net8.0 | 236.41 ns | 59.87 ns | x3.95 | 1416 | 32 | 98% |
 
-- `benchmarks/results/ryzen-win11/latest.summary.json`
-- `benchmarks/results/ryzen-win11/latest.summary.md`
+## Cross-platform sanity check
 
-Definitions: `Speedup = MediatRMean / LiaisonMean`, `Alloc reduction = 100 * (1 - LiaisonAlloc / MediatRAlloc)`.
-
-If the baseline summary is not present yet, run benchmarks locally and commit `benchmarks/results/ryzen-win11/latest.summary.json`.
-
-| Scenario | Liaison (ns) | MediatR (ns) | Speedup | Liaison (B/op) | MediatR (B/op) | Alloc reduction |
+| Scenario | Ryzen speedup | Ryzen alloc reduction | Apple M3 speedup | Apple M3 alloc reduction | RPi5 speedup | RPi5 alloc reduction |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Send_SingleHandler/Send | N/A | N/A | N/A | N/A | N/A | N/A |
-| Send_DI/Send | N/A | N/A | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=2) | N/A | N/A | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=5) | N/A | N/A | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=10) | N/A | N/A | N/A | N/A | N/A | N/A |
-
-### How to run locally
-
-```bash
-dotnet run -c Release --project benchmarks/Liaison.Mediator.Benchmarks --framework net8.0
-dotnet run --project benchmarks/tools/Benchmarks.SummaryGen -- \
-  --resultsDir "BenchmarkDotNet.Artifacts/results" \
-  --outDir "benchmarks/results/ryzen-win11" \
-  --machine "Ryzen 9 7940HS" \
-  --os "Windows 11 Pro" \
-  --arch "x64" \
-  --runtime "net8.0"
-```
-
-## Cross-platform sanity check (Ryzen 9 7940HS, Apple M3, Raspberry Pi 5)
-
-Relative metrics are taken from the committed summaries:
-
-- `benchmarks/results/ryzen-win11/latest.summary.json`
-- `benchmarks/results/apple-m3-macos/latest.summary.json`
-- `benchmarks/results/rpi5-linux/latest.summary.json`
-
-If a machine summary is missing, the values are reported as `N/A`.
-
-| Scenario | Ryzen (speedup / alloc) | Apple M3 (speedup / alloc) | RPi 5 (speedup / alloc) |
-| --- | --- | --- | --- |
-| Send_SingleHandler/Send | N/A | N/A | N/A |
-| Send_DI/Send | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=2) | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=5) | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=10) | N/A | N/A | N/A |
+| Send_DI/Send | x0.61 | -41% | x0.60 | -41% | x0.67 | -41% |
+| Send_DI_Pipeline/Send (BehaviorCount=1) | x0.69 | -29% | x0.74 | -29% | x0.76 | -29% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | x0.84 | -23% | x0.78 | -23% | x0.84 | -23% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | x0.89 | -14% | x0.92 | -14% | x0.86 | -14% |
+| Send_SingleHandler/Send | x1.39 | 13% | N/A | N/A | x1.29 | 13% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | x2.74 | 92% | N/A | N/A | x3.71 | 92% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | x3.28 | 96% | N/A | N/A | x5.22 | 96% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | x3.95 | 98% | N/A | N/A | x5.32 | 98% |
+<!-- BENCHMARKS:END -->
 
 ## License and ownership
 
