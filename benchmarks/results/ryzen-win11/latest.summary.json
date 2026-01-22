@@ -1,0 +1,137 @@
+{
+  "SchemaVersion": 1,
+  "GeneratedAtUtc": "2026-01-22T05:51:48.8793062+00:00",
+  "Machine": {
+    "Name": "Ryzen 9 7940HS",
+    "Os": "Windows 11 Pro",
+    "Arch": "x64",
+    "Runtime": "net8.0"
+  },
+  "Source": {
+    "RunTimestampUtc": "2026-01-22T05:39:17.5463788+00:00",
+    "Reports": [
+      {
+        "Format": "Csv",
+        "FileName": "Liaison.Mediator.Benchmarks.Benchmarks.Publish_MultiHandler-report.csv"
+      },
+      {
+        "Format": "Csv",
+        "FileName": "Liaison.Mediator.Benchmarks.Benchmarks.Send_DI-report.csv"
+      },
+      {
+        "Format": "Csv",
+        "FileName": "Liaison.Mediator.Benchmarks.Benchmarks.Send_DI_Pipeline-report.csv"
+      },
+      {
+        "Format": "Csv",
+        "FileName": "Liaison.Mediator.Benchmarks.Benchmarks.Send_SingleHandler-report.csv"
+      }
+    ]
+  },
+  "Scenarios": [
+    {
+      "Label": "Publish_MultiHandler/Publish (HandlerCount=10)",
+      "Liaison": {
+        "MeanNs": 59.87,
+        "AllocatedBytes": 32
+      },
+      "MediatR": {
+        "MeanNs": 236.41,
+        "AllocatedBytes": 1416
+      },
+      "Speedup": 3.948722231501587,
+      "AllocReductionPct": 97.74011299435028
+    },
+    {
+      "Label": "Publish_MultiHandler/Publish (HandlerCount=2)",
+      "Liaison": {
+        "MeanNs": 33.56,
+        "AllocatedBytes": 32
+      },
+      "MediatR": {
+        "MeanNs": 92.03,
+        "AllocatedBytes": 392
+      },
+      "Speedup": 2.7422526817640045,
+      "AllocReductionPct": 91.83673469387756
+    },
+    {
+      "Label": "Publish_MultiHandler/Publish (HandlerCount=5)",
+      "Liaison": {
+        "MeanNs": 44.36,
+        "AllocatedBytes": 32
+      },
+      "MediatR": {
+        "MeanNs": 145.5,
+        "AllocatedBytes": 776
+      },
+      "Speedup": 3.2799819657348963,
+      "AllocReductionPct": 95.87628865979381
+    },
+    {
+      "Label": "Send_DI/Send",
+      "Liaison": {
+        "MeanNs": 160.02,
+        "AllocatedBytes": 440
+      },
+      "MediatR": {
+        "MeanNs": 97.91,
+        "AllocatedBytes": 312
+      },
+      "Speedup": 0.6118610173728284,
+      "AllocReductionPct": -41.025641025641036
+    },
+    {
+      "Label": "Send_DI_Pipeline/Send (BehaviorCount=1)",
+      "Liaison": {
+        "MeanNs": 189.7,
+        "AllocatedBytes": 576
+      },
+      "MediatR": {
+        "MeanNs": 131.2,
+        "AllocatedBytes": 448
+      },
+      "Speedup": 0.691618344754876,
+      "AllocReductionPct": -28.57142857142858
+    },
+    {
+      "Label": "Send_DI_Pipeline/Send (BehaviorCount=2)",
+      "Liaison": {
+        "MeanNs": 195.6,
+        "AllocatedBytes": 688
+      },
+      "MediatR": {
+        "MeanNs": 163.7,
+        "AllocatedBytes": 560
+      },
+      "Speedup": 0.8369120654396728,
+      "AllocReductionPct": -22.857142857142865
+    },
+    {
+      "Label": "Send_DI_Pipeline/Send (BehaviorCount=5)",
+      "Liaison": {
+        "MeanNs": 226.4,
+        "AllocatedBytes": 1024
+      },
+      "MediatR": {
+        "MeanNs": 200.4,
+        "AllocatedBytes": 896
+      },
+      "Speedup": 0.8851590106007067,
+      "AllocReductionPct": -14.28571428571428
+    },
+    {
+      "Label": "Send_SingleHandler/Send",
+      "Liaison": {
+        "MeanNs": 71.71,
+        "AllocatedBytes": 272
+      },
+      "MediatR": {
+        "MeanNs": 99.92,
+        "AllocatedBytes": 312
+      },
+      "Speedup": 1.3933900432296753,
+      "AllocReductionPct": 12.82051282051282
+    }
+  ]
+}
