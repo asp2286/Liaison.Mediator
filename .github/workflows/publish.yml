@@ -24,24 +24,45 @@ jobs:
         shell: bash
         run: |
           set -e
+
           # last tag like 1.2.3; default 0.1.0
           LAST_TAG=$(git describe --tags --abbrev=0 --match "[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo 0.1.0)
           IFS=. read -r MA MI PA <<< "$LAST_TAG"
 
-          # optional bump hints in commit messages: [major] / [minor]
-          MSG=$(git log -1 --pretty=%B)
-          if [[ "$MSG" == *"[major]"* ]]; then MA=$((MA+1)); MI=0; PA=0
-          elif [[ "$MSG" == *"[minor]"* ]]; then MI=$((MI+1)); PA=0
-          else PA=$((PA+1)); fi
-
-          if [[ "${GITHUB_REF}" =~ refs/tags/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            PKG_VERSION="${BASH_REMATCH[1]}"                        # stable
+          # CHANGED: look at ALL commit messages since last tag, not only the last one
+          if git rev-parse "$LAST_TAG" >/dev/null 2>&1; then
+            RANGE="${LAST_TAG}..HEAD"
           else
-            PKG_VERSION="$MA.$MI.$PA-rc.${GITHUB_RUN_NUMBER}"       # RC on master
+            RANGE="HEAD"
+          fi
+          LOG=$(git log --pretty=%B $RANGE)
+
+          # optional bump hints in commit messages: [major] / [minor]
+          if [[ "$LOG" == *"[major]"* ]]; then
+            MA=$((MA+1)); MI=0; PA=0
+          elif [[ "$LOG" == *"[minor]"* ]]; then
+            MI=$((MI+1)); PA=0
+          else
+            PA=$((PA+1))
           fi
 
-          echo "PKG_VERSION=$PKG_VERSION" | tee -a $GITHUB_ENV
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF}" =~ refs/tags/([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            PKG_VERSION="${BASH_REMATCH[1]}"              # stable
+          else
+            # NEW: RC number = commits since last tag, starting from rc.1
+            if git rev-parse "$LAST_TAG" >/dev/null 2>&1; then
+              COUNT=$(git rev-list --count "${LAST_TAG}..HEAD")
+            else
+              COUNT=$(git rev-list --count HEAD)
+            fi
+            if [[ "$COUNT" -lt 1 ]]; then COUNT=1; fi     # ensure first RC is rc.1
+
+            PKG_VERSION="$MA.$MI.$PA-rc.$COUNT"           # RC on main
+          fi
+
+          echo "PKG_VERSION=$PKG_VERSION" | tee -a "$GITHUB_ENV"
+          echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
+
 
       - name: Build
         run: dotnet build -c Release
