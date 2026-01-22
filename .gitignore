@@ -3,6 +3,7 @@ bin/
 obj/
 artifacts/
 TestResults/
+BenchmarkDotNet.Artifacts/
 
 # Package artifacts
 *.nupkg

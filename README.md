@@ -70,6 +70,58 @@ Each sample writes its output to the console so you can verify handler execution
 - `src/Liaison.Mediator` – Library source, including interfaces like [`IMediator`](src/Liaison.Mediator/IMediator.cs) and the [`MediatorBuilder`](src/Liaison.Mediator/MediatorBuilder.cs).
 - `tests/Liaison.Mediator.Tests` – xUnit test project with coverage for core scenarios.
 
+## Benchmarks (Win11 Pro / Ryzen 9 7940HS as the primary baseline)
+
+BenchmarkDotNet runs are summarized into committed files under `benchmarks/results/**` so results are reproducible and easy to review.
+
+Baseline summary files (commit these after running locally):
+
+- `benchmarks/results/ryzen-win11/latest.summary.json`
+- `benchmarks/results/ryzen-win11/latest.summary.md`
+
+Definitions: `Speedup = MediatRMean / LiaisonMean`, `Alloc reduction = 100 * (1 - LiaisonAlloc / MediatRAlloc)`.
+
+If the baseline summary is not present yet, run benchmarks locally and commit `benchmarks/results/ryzen-win11/latest.summary.json`.
+
+| Scenario | Liaison (ns) | MediatR (ns) | Speedup | Liaison (B/op) | MediatR (B/op) | Alloc reduction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Send_SingleHandler/Send | N/A | N/A | N/A | N/A | N/A | N/A |
+| Send_DI/Send | N/A | N/A | N/A | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=2) | N/A | N/A | N/A | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=5) | N/A | N/A | N/A | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=10) | N/A | N/A | N/A | N/A | N/A | N/A |
+
+### How to run locally
+
+```bash
+dotnet run -c Release --project benchmarks/Liaison.Mediator.Benchmarks --framework net8.0
+dotnet run --project benchmarks/tools/Benchmarks.SummaryGen -- \
+  --resultsDir "BenchmarkDotNet.Artifacts/results" \
+  --outDir "benchmarks/results/ryzen-win11" \
+  --machine "Ryzen 9 7940HS" \
+  --os "Windows 11 Pro" \
+  --arch "x64" \
+  --runtime "net8.0"
+```
+
+## Cross-platform sanity check (Ryzen 9 7940HS, Apple M3, Raspberry Pi 5)
+
+Relative metrics are taken from the committed summaries:
+
+- `benchmarks/results/ryzen-win11/latest.summary.json`
+- `benchmarks/results/apple-m3-macos/latest.summary.json`
+- `benchmarks/results/rpi5-linux/latest.summary.json`
+
+If a machine summary is missing, the values are reported as `N/A`.
+
+| Scenario | Ryzen (speedup / alloc) | Apple M3 (speedup / alloc) | RPi 5 (speedup / alloc) |
+| --- | --- | --- | --- |
+| Send_SingleHandler/Send | N/A | N/A | N/A |
+| Send_DI/Send | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=2) | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=5) | N/A | N/A | N/A |
+| Publish_MultiHandler/Publish (HandlerCount=10) | N/A | N/A | N/A |
+
 ## License and ownership
 
 This project is released under the MIT License and is developed and maintained by **INNOVATIVE INFLUENCE TECHNOLOGY, LLC**. See [LICENSE](LICENSE) for full terms.

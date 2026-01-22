@@ -6,6 +6,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liaison.Mediator", "src\\Li
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liaison.Mediator.Tests", "tests\\Liaison.Mediator.Tests\\Liaison.Mediator.Tests.csproj", "{ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{BFACF98B-2049-4D54-A8BE-15CDB6C2090B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Liaison.Mediator.Benchmarks", "benchmarks\\Liaison.Mediator.Benchmarks\\Liaison.Mediator.Benchmarks.csproj", "{CF533EC2-0F24-4696-A743-FFD0C499C54F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks.SummaryGen", "benchmarks\\tools\\Benchmarks.SummaryGen\\Benchmarks.SummaryGen.csproj", "{FE5D8860-3A2D-4AAD-B37B-1EB97F555B96}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|Any CPU = Debug|Any CPU
@@ -20,5 +26,17 @@ Global
         {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
         {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
         {ADAB9A82-F049-4FE2-8F15-60C7BA02F2FF}.Release|Any CPU.Build.0 = Release|Any CPU
+        {CF533EC2-0F24-4696-A743-FFD0C499C54F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {CF533EC2-0F24-4696-A743-FFD0C499C54F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {CF533EC2-0F24-4696-A743-FFD0C499C54F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {CF533EC2-0F24-4696-A743-FFD0C499C54F}.Release|Any CPU.Build.0 = Release|Any CPU
+        {FE5D8860-3A2D-4AAD-B37B-1EB97F555B96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {FE5D8860-3A2D-4AAD-B37B-1EB97F555B96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {FE5D8860-3A2D-4AAD-B37B-1EB97F555B96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {FE5D8860-3A2D-4AAD-B37B-1EB97F555B96}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(NestedProjects) = preSolution
+        {CF533EC2-0F24-4696-A743-FFD0C499C54F} = {BFACF98B-2049-4D54-A8BE-15CDB6C2090B}
+        {FE5D8860-3A2D-4AAD-B37B-1EB97F555B96} = {BFACF98B-2049-4D54-A8BE-15CDB6C2090B}
     EndGlobalSection
 EndGlobal
