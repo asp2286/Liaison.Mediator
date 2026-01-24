@@ -136,14 +136,14 @@ Primary baseline: Windows 11 Pro / Ryzen 9 7940HS.
 
 | Scenario | Ryzen speedup | Ryzen alloc reduction | Apple M3 speedup | Apple M3 alloc reduction | RPi5 speedup | RPi5 alloc reduction |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Send_DI/Send | x1.24 | 23% | N/A | N/A | N/A | N/A |
-| Send_DI_Pipeline/Send (BehaviorCount=2) | x1.17 | 34% | N/A | N/A | N/A | N/A |
-| Send_DI_Pipeline/Send (BehaviorCount=5) | x1.51 | 59% | N/A | N/A | N/A | N/A |
-| Send_DI_Pipeline/Send (BehaviorCount=10) | x2.26 | 75% | N/A | N/A | N/A | N/A |
-| Send_SingleHandler/Send | x1.28 | 13% | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=2) | x2.76 | 92% | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=5) | x3.60 | 96% | N/A | N/A | N/A | N/A |
-| Publish_MultiHandler/Publish (HandlerCount=10) | x3.76 | 98% | N/A | N/A | N/A | N/A |
+| Send_DI/Send | x1.24 | 23% | x1.23 | 23% | x1.26 | 23% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | x1.17 | 34% | x1.29 | 34% | x1.31 | 34% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | x1.51 | 59% | x1.77 | 59% | x1.57 | 59% |
+| Send_DI_Pipeline/Send (BehaviorCount=10) | x2.26 | 75% | x2.22 | 75% | x1.95 | 75% |
+| Send_SingleHandler/Send | x1.28 | 13% | x1.35 | 13% | x1.41 | 13% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | x2.76 | 92% | x3.29 | 92% | x3.79 | 92% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | x3.60 | 96% | x4.39 | 96% | x5.17 | 96% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | x3.76 | 98% | x4.99 | 98% | x5.37 | 98% |
 <!-- BENCHMARKS:END -->
 
 ## License and ownership
