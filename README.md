@@ -1,18 +1,64 @@
 # Liaison.Mediator
 
-Liaison.Mediator is a lightweight mediator library for .NET that keeps the familiar request/response and notification patterns of [MediatR](https://github.com/jbogard/MediatR) while removing assembly scanning. Handlers are registered explicitly via a fluent builder so the runtime footprint stays small and configuration is fully deterministic.
+[![NuGet](https://img.shields.io/nuget/v/Liaison.Mediator.svg)](https://www.nuget.org/packages/Liaison.Mediator/)
+[![NuGet (prerelease)](https://img.shields.io/nuget/vpre/Liaison.Mediator.svg)](https://www.nuget.org/packages/Liaison.Mediator/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Liaison.Mediator.svg)](https://www.nuget.org/packages/Liaison.Mediator/)
+
+**NuGet package:** https://www.nuget.org/packages/Liaison.Mediator
+
+Liaison.Mediator is a lightweight mediator library for .NET that keeps the familiar request/response and notification patterns of [MediatR](https://github.com/jbogard/MediatR) without requiring assembly scanning. Handlers are registered explicitly via a fluent builder so the runtime footprint stays small and configuration is fully deterministic.
 
 ## Features
 
-- **Explicit registration** – Use `MediatorBuilder` to register request and notification handlers without reflection or assembly scanning.
+- **Explicit registration (default)** – Use `MediatorBuilder` to register request and notification handlers without reflection or assembly scanning.
 - **Request/response messaging** – Define requests by implementing `IRequest<TResult>` and handle them through `IRequestHandler<TRequest, TResult>` implementations.
 - **Notifications** – Broadcast one-way messages by implementing `INotification` and attaching one or more `INotificationHandler<TNotification>` instances.
 - **Unit result helper** – Return `Unit.Value` from commands that do not need to return data.
-- **Microsoft.Extensions.DependencyInjection integration** – Wire `IMediator` into `IServiceCollection` and let DI construct handlers (optional assembly-scanning overload available).
+- **Microsoft.Extensions.DependencyInjection integration** – Wire `IMediator` into `IServiceCollection` and let DI construct handlers. An optional convenience overload can scan assemblies, but only as an opt-in helper for rapid prototyping or migration.
+
+## Why Liaison.Mediator
+
+- Explicit registration remains the default and recommended approach (`MediatorBuilder` or registering handlers in DI).
+- No required assembly scanning; scanning is provided only as an opt-in convenience overload.
+- Deterministic configuration (no hidden handler discovery).
+- Design intent: keep startup predictable and be more trimming/AOT-friendly by avoiding reflection-heavy discovery in the default path.
+
+## When to prefer MediatR
+
+- You want the larger ecosystem (integrations, extensions, examples, community support).
+- You rely on MediatR-specific conventions or extension patterns beyond a minimal core API.
+- You prefer feature completeness and established defaults over explicit wiring.
+
+## Trade-offs / Non-goals
+
+- `Send` requires exactly one handler per concrete request type (multiple handlers are not supported and result in an error).
+- Dispatch is by exact runtime type (no polymorphic/base-type fallback for requests or notifications).
+- No built-in complex ordering/priority policies for notification handlers (order is registration/container order).
+
+## Publish semantics
+
+- Current behavior (verified): `MediatorBuilder` publishes handlers sequentially, in the order they were registered; exceptions are fail-fast.
+- Current behavior (verified): DI publish enumerates handlers from the container; `INotificationPublisher` controls sequencing (default `ForeachAwaitNotificationPublisher` is sequential/fail-fast; `TaskWhenAllNotificationPublisher` is concurrent and follows `Task.WhenAll` exception aggregation).
+- Current behavior (verified): the `CancellationToken` is passed to each handler and publisher; cancellation behavior depends on the handlers/publisher.
+- Current behavior (verified): 0 B/op allocations are possible for Publish when handlers are allocation-free and Liaison’s DI publish path can invoke them directly without building per-call execution wrappers.
+
+## Compatibility
+
+- Target frameworks: `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`.
+- Nullable reference types: enabled.
+- Trimming/AOT: explicit registration avoids required scanning; the scanning overload uses reflection over assembly types (design intent, not a hard guarantee).
+- Versioning: stable releases use semantic versions; breaking changes require a major version bump (see Release flow).
+
+### Future: Abstractions-only package (idea)
+
+Optional idea: an `Abstractions` package containing the core interfaces (`IMediator`, `IRequest<>`, `INotification`, etc.) for large solutions that want to share contracts without referencing the full implementation. No commitment or timeline.
 
 ## Getting started
 
 1. Install the `Liaison.Mediator` package from NuGet.
+   > Note: The GitHub “Packages” section refers to GitHub Packages.
+   > Liaison.Mediator is published on NuGet.org (see the link and badges above).
+
 2. Choose the registration style that fits your app:
    - Build an `IMediator` manually with `MediatorBuilder` for full control over handler wiring.
    - Register handlers with Microsoft.Extensions.DependencyInjection, then call `AddMediator` to let the container construct them.
@@ -63,7 +109,7 @@ Each sample writes its output to the console so you can verify handler execution
 ## Release flow
 
 - **Stable** – Tag the desired commit with the semantic version (for example `1.2.3`) and push the tag to publish the exact build.
-- **Release candidates** – Every push to `master` emits `-rc.*` packages. Include `[minor]` or `[major]` in the commit message to bump the respective version component before the prerelease is generated.
+- **Release candidates** – Every push to `main` emits `-rc.*` packages. Include `[minor]` or `[major]` in the commit message to bump the respective version component before the prerelease is generated.
 
 ## Project layout
 
