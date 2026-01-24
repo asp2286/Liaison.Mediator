@@ -1,6 +1,6 @@
 {
   "SchemaVersion": 1,
-  "GeneratedAtUtc": "2026-01-22T07:00:19.8811336+00:00",
+  "GeneratedAtUtc": "2026-01-24T15:37:47.7418179+00:00",
   "Machine": {
     "Name": "Raspberry Pi 5 (Cortex-A76 x4)",
     "Os": "Ubuntu 24.04.3 LTS",
@@ -8,7 +8,7 @@
     "Runtime": "net8.0"
   },
   "Source": {
-    "RunTimestampUtc": "2026-01-22T06:54:59.161314+00:00",
+    "RunTimestampUtc": "2026-01-24T15:34:07.3236672+00:00",
     "Reports": [
       {
         "Format": "Csv",
@@ -32,105 +32,105 @@
     {
       "Label": "Publish_MultiHandler/Publish (HandlerCount=10)",
       "Liaison": {
-        "MeanNs": 218.2,
+        "MeanNs": 218.4,
         "AllocatedBytes": 32
       },
       "MediatR": {
-        "MeanNs": 1160.9,
+        "MeanNs": 1173.5,
         "AllocatedBytes": 1416
       },
-      "Speedup": 5.320348304307975,
+      "Speedup": 5.373168498168498,
       "AllocReductionPct": 97.74011299435028
     },
     {
       "Label": "Publish_MultiHandler/Publish (HandlerCount=2)",
       "Liaison": {
-        "MeanNs": 107.2,
+        "MeanNs": 105.4,
         "AllocatedBytes": 32
       },
       "MediatR": {
-        "MeanNs": 398,
+        "MeanNs": 399.3,
         "AllocatedBytes": 392
       },
-      "Speedup": 3.712686567164179,
+      "Speedup": 3.78842504743833,
       "AllocReductionPct": 91.83673469387756
     },
     {
       "Label": "Publish_MultiHandler/Publish (HandlerCount=5)",
       "Liaison": {
-        "MeanNs": 139.4,
+        "MeanNs": 137.5,
         "AllocatedBytes": 32
       },
       "MediatR": {
-        "MeanNs": 727.1,
+        "MeanNs": 711.1,
         "AllocatedBytes": 776
       },
-      "Speedup": 5.215925394548063,
+      "Speedup": 5.171636363636364,
       "AllocReductionPct": 95.87628865979381
     },
     {
       "Label": "Send_DI/Send",
       "Liaison": {
-        "MeanNs": 632.4,
-        "AllocatedBytes": 440
+        "MeanNs": 345.8,
+        "AllocatedBytes": 240
       },
       "MediatR": {
-        "MeanNs": 421.8,
+        "MeanNs": 435.8,
         "AllocatedBytes": 312
       },
-      "Speedup": 0.6669829222011385,
-      "AllocReductionPct": -41.025641025641036
+      "Speedup": 1.260266049739734,
+      "AllocReductionPct": 23.076923076923073
     },
     {
-      "Label": "Send_DI_Pipeline/Send (BehaviorCount=1)",
+      "Label": "Send_DI_Pipeline/Send (BehaviorCount=10)",
       "Liaison": {
-        "MeanNs": 767.5,
-        "AllocatedBytes": 576
+        "MeanNs": 627.1,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 585.7,
-        "AllocatedBytes": 448
+        "MeanNs": 1222.5,
+        "AllocatedBytes": 1456
       },
-      "Speedup": 0.7631270358306189,
-      "AllocReductionPct": -28.57142857142858
+      "Speedup": 1.9494498485090097,
+      "AllocReductionPct": 74.72527472527473
     },
     {
       "Label": "Send_DI_Pipeline/Send (BehaviorCount=2)",
       "Liaison": {
-        "MeanNs": 822.5,
-        "AllocatedBytes": 688
+        "MeanNs": 536.7,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 689,
+        "MeanNs": 705.7,
         "AllocatedBytes": 560
       },
-      "Speedup": 0.8376899696048632,
-      "AllocReductionPct": -22.857142857142865
+      "Speedup": 1.3148872740823552,
+      "AllocReductionPct": 34.285714285714285
     },
     {
       "Label": "Send_DI_Pipeline/Send (BehaviorCount=5)",
       "Liaison": {
-        "MeanNs": 983.9,
-        "AllocatedBytes": 1024
+        "MeanNs": 567,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 847.5,
+        "MeanNs": 887.9,
         "AllocatedBytes": 896
       },
-      "Speedup": 0.8613680252058136,
-      "AllocReductionPct": -14.28571428571428
+      "Speedup": 1.5659611992945326,
+      "AllocReductionPct": 58.92857142857143
     },
     {
       "Label": "Send_SingleHandler/Send",
       "Liaison": {
-        "MeanNs": 282.1,
+        "MeanNs": 286.6,
         "AllocatedBytes": 272
       },
       "MediatR": {
-        "MeanNs": 363.7,
+        "MeanNs": 402.9,
         "AllocatedBytes": 312
       },
-      "Speedup": 1.2892591279688053,
+      "Speedup": 1.405792044661549,
       "AllocReductionPct": 12.82051282051282
     }
   ]

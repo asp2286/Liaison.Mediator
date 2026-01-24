@@ -5,15 +5,15 @@
 - Runtime: net8.0
 - Source formats: Csv
 - Source files: 4
-- Run timestamp (UTC): 2026-01-22T06:54:59.1613140+00:00
+- Run timestamp (UTC): 2026-01-24T15:34:07.3236672+00:00
 
 | Scenario | Liaison (ns) | MediatR (ns) | Speedup | Liaison (B/op) | MediatR (B/op) | Alloc reduction |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Publish_MultiHandler/Publish (HandlerCount=10) | 218.2 | 1160.9 | 5.32x | 32 | 1416 | 97.7% |
-| Publish_MultiHandler/Publish (HandlerCount=2) | 107.2 | 398 | 3.71x | 32 | 392 | 91.8% |
-| Publish_MultiHandler/Publish (HandlerCount=5) | 139.4 | 727.1 | 5.22x | 32 | 776 | 95.9% |
-| Send_DI/Send | 632.4 | 421.8 | 0.67x | 440 | 312 | -41% |
-| Send_DI_Pipeline/Send (BehaviorCount=1) | 767.5 | 585.7 | 0.76x | 576 | 448 | -28.6% |
-| Send_DI_Pipeline/Send (BehaviorCount=2) | 822.5 | 689 | 0.84x | 688 | 560 | -22.9% |
-| Send_DI_Pipeline/Send (BehaviorCount=5) | 983.9 | 847.5 | 0.86x | 1024 | 896 | -14.3% |
-| Send_SingleHandler/Send | 282.1 | 363.7 | 1.29x | 272 | 312 | 12.8% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | 218.4 | 1173.5 | 5.37x | 32 | 1416 | 97.7% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | 105.4 | 399.3 | 3.79x | 32 | 392 | 91.8% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | 137.5 | 711.1 | 5.17x | 32 | 776 | 95.9% |
+| Send_DI/Send | 345.8 | 435.8 | 1.26x | 240 | 312 | 23.1% |
+| Send_DI_Pipeline/Send (BehaviorCount=10) | 627.1 | 1222.5 | 1.95x | 368 | 1456 | 74.7% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | 536.7 | 705.7 | 1.31x | 368 | 560 | 34.3% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | 567 | 887.9 | 1.57x | 368 | 896 | 58.9% |
+| Send_SingleHandler/Send | 286.6 | 402.9 | 1.41x | 272 | 312 | 12.8% |
