@@ -4,19 +4,39 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <!-- Branding / ownership -->
     <PackageId>Liaison.Mediator</PackageId>
-    <Authors>asp2286</Authors>
+    <Authors>asp2286; INNOVATIVE INFLUENCE TECHNOLOGY, LLC</Authors>
+    <Company>INNOVATIVE INFLUENCE TECHNOLOGY, LLC</Company>
+    <Copyright>Copyright © INNOVATIVE INFLUENCE TECHNOLOGY, LLC</Copyright>
+    <!-- NuGet package metadata -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/asp2286/Liaison.Mediator</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/asp2286/Liaison.Mediator</PackageProjectUrl>
+    <PackageReadmeFile>README.nuget.md</PackageReadmeFile>
+    <Description>Deterministic mediator for .NET with explicit handler registration (no required
+      assembly scanning).</Description>
+    <PackageTags>dotnet;csharp;mediator;cqrs;dependency-injection;aot;trimming;performance</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageReadmeFile>NuGetReadme.md</PackageReadmeFile>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>nupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="NuGetReadme.md" Pack="true" PackagePath="/" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+      Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
