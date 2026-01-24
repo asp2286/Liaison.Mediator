@@ -123,27 +123,27 @@ Primary baseline: Windows 11 Pro / Ryzen 9 7940HS.
 
 | Scenario | Runtime | MediatR Mean | Liaison Mean | Speedup | MediatR Alloc (B/op) | Liaison Alloc (B/op) | Alloc Reduction |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Send_DI/Send | net8.0 | 97.91 ns | 160.02 ns | x0.61 | 312 | 440 | -41% |
-| Send_DI_Pipeline/Send (BehaviorCount=1) | net8.0 | 131.2 ns | 189.7 ns | x0.69 | 448 | 576 | -29% |
-| Send_DI_Pipeline/Send (BehaviorCount=2) | net8.0 | 163.7 ns | 195.6 ns | x0.84 | 560 | 688 | -23% |
-| Send_DI_Pipeline/Send (BehaviorCount=5) | net8.0 | 200.4 ns | 226.4 ns | x0.89 | 896 | 1024 | -14% |
-| Send_SingleHandler/Send | net8.0 | 99.92 ns | 71.71 ns | x1.39 | 312 | 272 | 13% |
-| Publish_MultiHandler/Publish (HandlerCount=2) | net8.0 | 92.03 ns | 33.56 ns | x2.74 | 392 | 32 | 92% |
-| Publish_MultiHandler/Publish (HandlerCount=5) | net8.0 | 145.5 ns | 44.36 ns | x3.28 | 776 | 32 | 96% |
-| Publish_MultiHandler/Publish (HandlerCount=10) | net8.0 | 236.41 ns | 59.87 ns | x3.95 | 1416 | 32 | 98% |
+| Send_DI/Send | net8.0 | 94.03 ns | 75.94 ns | x1.24 | 312 | 240 | 23% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | net8.0 | 155.6 ns | 133.1 ns | x1.17 | 560 | 368 | 34% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | net8.0 | 194.3 ns | 128.5 ns | x1.51 | 896 | 368 | 59% |
+| Send_DI_Pipeline/Send (BehaviorCount=10) | net8.0 | 330.2 ns | 146.1 ns | x2.26 | 1456 | 368 | 75% |
+| Send_SingleHandler/Send | net8.0 | 86.16 ns | 67.52 ns | x1.28 | 312 | 272 | 13% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | net8.0 | 93.98 ns | 34.08 ns | x2.76 | 392 | 32 | 92% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | net8.0 | 152.5 ns | 42.36 ns | x3.60 | 776 | 32 | 96% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | net8.0 | 230.63 ns | 61.34 ns | x3.76 | 1416 | 32 | 98% |
 
 ## Cross-platform sanity check
 
 | Scenario | Ryzen speedup | Ryzen alloc reduction | Apple M3 speedup | Apple M3 alloc reduction | RPi5 speedup | RPi5 alloc reduction |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Send_DI/Send | x0.61 | -41% | x0.60 | -41% | x0.67 | -41% |
-| Send_DI_Pipeline/Send (BehaviorCount=1) | x0.69 | -29% | x0.74 | -29% | x0.76 | -29% |
-| Send_DI_Pipeline/Send (BehaviorCount=2) | x0.84 | -23% | x0.78 | -23% | x0.84 | -23% |
-| Send_DI_Pipeline/Send (BehaviorCount=5) | x0.89 | -14% | x0.92 | -14% | x0.86 | -14% |
-| Send_SingleHandler/Send | x1.39 | 13% | N/A | N/A | x1.29 | 13% |
-| Publish_MultiHandler/Publish (HandlerCount=2) | x2.74 | 92% | N/A | N/A | x3.71 | 92% |
-| Publish_MultiHandler/Publish (HandlerCount=5) | x3.28 | 96% | N/A | N/A | x5.22 | 96% |
-| Publish_MultiHandler/Publish (HandlerCount=10) | x3.95 | 98% | N/A | N/A | x5.32 | 98% |
+| Send_DI/Send | x1.24 | 23% | x1.23 | 23% | x1.26 | 23% |
+| Send_DI_Pipeline/Send (BehaviorCount=2) | x1.17 | 34% | x1.29 | 34% | x1.31 | 34% |
+| Send_DI_Pipeline/Send (BehaviorCount=5) | x1.51 | 59% | x1.77 | 59% | x1.57 | 59% |
+| Send_DI_Pipeline/Send (BehaviorCount=10) | x2.26 | 75% | x2.22 | 75% | x1.95 | 75% |
+| Send_SingleHandler/Send | x1.28 | 13% | x1.35 | 13% | x1.41 | 13% |
+| Publish_MultiHandler/Publish (HandlerCount=2) | x2.76 | 92% | x3.29 | 92% | x3.79 | 92% |
+| Publish_MultiHandler/Publish (HandlerCount=5) | x3.60 | 96% | x4.39 | 96% | x5.17 | 96% |
+| Publish_MultiHandler/Publish (HandlerCount=10) | x3.76 | 98% | x4.99 | 98% | x5.37 | 98% |
 <!-- BENCHMARKS:END -->
 
 ## License and ownership
