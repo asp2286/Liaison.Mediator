@@ -15,7 +15,7 @@ public class Send_DI_Pipeline : BenchmarkBase
     private IServiceScope? _mediatRScope;
     private readonly Ping _request = new(42);
 
-    [Params(1, 2, 5)]
+    [Params(2, 5, 10)]
     public int BehaviorCount { get; set; }
 
     [GlobalSetup]

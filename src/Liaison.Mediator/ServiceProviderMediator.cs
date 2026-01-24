@@ -34,7 +34,16 @@ internal sealed class ServiceProviderMediator : IMediator
 
         var requestType = request.GetType();
         var wrapper = _requestHandlerWrappers.GetOrAdd(requestType, _createRequestHandlerWrapper);
-        var response = await wrapper.Handle(request, cancellationToken).ConfigureAwait(false);
+        var responseTask = wrapper.Handle(request, cancellationToken);
+        object? response;
+        if (responseTask.Status == TaskStatus.RanToCompletion)
+        {
+            response = responseTask.Result;
+        }
+        else
+        {
+            response = await responseTask.ConfigureAwait(false);
+        }
 
         if (response is null)
         {
@@ -124,18 +133,65 @@ internal sealed class ServiceProviderMediator : IMediator
             var handler = _serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
             if (!_hasPipelineBehaviors)
             {
-                return await handler.Handle(typedRequest, cancellationToken).ConfigureAwait(false);
+                var handlerTask = handler.Handle(typedRequest, cancellationToken);
+                if (handlerTask.Status == TaskStatus.RanToCompletion)
+                {
+                    return handlerTask.Result;
+                }
+
+                return await handlerTask.ConfigureAwait(false);
             }
 
             var behaviorEnumerable = _serviceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>();
             var behaviors = behaviorEnumerable as IPipelineBehavior<TRequest, TResponse>[] ?? behaviorEnumerable.ToArray();
             if (behaviors.Length == 0)
             {
-                return await handler.Handle(typedRequest, cancellationToken).ConfigureAwait(false);
+                var handlerTask = handler.Handle(typedRequest, cancellationToken);
+                if (handlerTask.Status == TaskStatus.RanToCompletion)
+                {
+                    return handlerTask.Result;
+                }
+
+                return await handlerTask.ConfigureAwait(false);
             }
 
-            var execution = new PipelineExecution(typedRequest, cancellationToken, handler, behaviors);
-            return await execution.Next().ConfigureAwait(false);
+            if (behaviors.Length == 1)
+            {
+                // Fast path: avoid the general index-based runner for single-behavior pipelines.
+                var execution = new SingleBehaviorExecution(typedRequest, cancellationToken, handler);
+                var pipelineTask = behaviors[0].Handle(typedRequest, execution.Next, cancellationToken);
+                if (pipelineTask.Status == TaskStatus.RanToCompletion)
+                {
+                    return pipelineTask.Result;
+                }
+
+                return await pipelineTask.ConfigureAwait(false);
+            }
+
+            if (behaviors.Length == 2)
+            {
+                // Fast path: avoid the general index-based runner for two-behavior pipelines.
+                // This saves one "Next" hop compared to the general runner.
+                var execution = new TwoBehaviorExecution(typedRequest, cancellationToken, handler, behaviors[1]);
+                var pipelineTask = behaviors[0].Handle(typedRequest, execution.Next, cancellationToken);
+                if (pipelineTask.Status == TaskStatus.RanToCompletion)
+                {
+                    return pipelineTask.Result;
+                }
+
+                return await pipelineTask.ConfigureAwait(false);
+            }
+
+            // General path: start execution at the second behavior. The first behavior is invoked directly to
+            // remove one "Next" hop while keeping behavior order identical.
+            var pipeline = new PipelineExecution(typedRequest, cancellationToken, handler, behaviors, startIndex: 1);
+            var task = behaviors[0].Handle(typedRequest, pipeline.Next, cancellationToken);
+            if (task.Status == TaskStatus.RanToCompletion)
+            {
+                return task.Result;
+            }
+
+            return await task.ConfigureAwait(false);
         }
 
         private static void EnsureExactlyOneHandler(IServiceProvider serviceProvider)
@@ -187,27 +243,86 @@ internal sealed class ServiceProviderMediator : IMediator
             private readonly IRequestHandler<TRequest, TResponse> _handler;
             private readonly IPipelineBehavior<TRequest, TResponse>[] _behaviors;
             private int _nextIndex;
-            private readonly RequestHandlerDelegate<TResponse> _next;
+            public RequestHandlerDelegate<TResponse> Next { get; }
 
             public PipelineExecution(
                 TRequest request,
                 CancellationToken cancellationToken,
                 IRequestHandler<TRequest, TResponse> handler,
-                IPipelineBehavior<TRequest, TResponse>[] behaviors)
+                IPipelineBehavior<TRequest, TResponse>[] behaviors,
+                int startIndex)
             {
                 _request = request;
                 _cancellationToken = cancellationToken;
                 _handler = handler;
                 _behaviors = behaviors;
-                _next = Next;
+                _nextIndex = startIndex;
+                Next = InvokeNext;
             }
 
-            public Task<TResponse> Next()
+            private Task<TResponse> InvokeNext()
             {
                 var index = _nextIndex++;
                 if (index < _behaviors.Length)
                 {
-                    return _behaviors[index].Handle(_request, _next, _cancellationToken);
+                    return _behaviors[index].Handle(_request, Next, _cancellationToken);
+                }
+
+                return _handler.Handle(_request, _cancellationToken);
+            }
+        }
+
+        private sealed class SingleBehaviorExecution
+        {
+            private readonly TRequest _request;
+            private readonly CancellationToken _cancellationToken;
+            private readonly IRequestHandler<TRequest, TResponse> _handler;
+
+            public RequestHandlerDelegate<TResponse> Next { get; }
+
+            public SingleBehaviorExecution(
+                TRequest request,
+                CancellationToken cancellationToken,
+                IRequestHandler<TRequest, TResponse> handler)
+            {
+                _request = request;
+                _cancellationToken = cancellationToken;
+                _handler = handler;
+                Next = InvokeHandler;
+            }
+
+            private Task<TResponse> InvokeHandler()
+                => _handler.Handle(_request, _cancellationToken);
+        }
+
+        private sealed class TwoBehaviorExecution
+        {
+            private readonly TRequest _request;
+            private readonly CancellationToken _cancellationToken;
+            private readonly IRequestHandler<TRequest, TResponse> _handler;
+            private readonly IPipelineBehavior<TRequest, TResponse> _secondBehavior;
+            private int _nextIndex;
+            public RequestHandlerDelegate<TResponse> Next { get; }
+
+            public TwoBehaviorExecution(
+                TRequest request,
+                CancellationToken cancellationToken,
+                IRequestHandler<TRequest, TResponse> handler,
+                IPipelineBehavior<TRequest, TResponse> secondBehavior)
+            {
+                _request = request;
+                _cancellationToken = cancellationToken;
+                _handler = handler;
+                _secondBehavior = secondBehavior;
+                Next = InvokeNext;
+            }
+
+            private Task<TResponse> InvokeNext()
+            {
+                var index = _nextIndex++;
+                if (index == 0)
+                {
+                    return _secondBehavior.Handle(_request, Next, _cancellationToken);
                 }
 
                 return _handler.Handle(_request, _cancellationToken);
