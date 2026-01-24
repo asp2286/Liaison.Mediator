@@ -1,6 +1,6 @@
 {
   "SchemaVersion": 1,
-  "GeneratedAtUtc": "2026-01-22T04:25:09.40561+00:00",
+  "GeneratedAtUtc": "2026-01-22T09:29:12.514521+00:00",
   "Machine": {
     "Name": "Apple M3",
     "Os": "macOS",
@@ -8,7 +8,7 @@
     "Runtime": "net8.0"
   },
   "Source": {
-    "RunTimestampUtc": "2026-01-22T04:24:55.2463863+00:00",
+    "RunTimestampUtc": "2026-01-22T09:08:03.5647622+00:00",
     "Reports": [
       {
         "Format": "Csv",
@@ -28,93 +28,93 @@
     {
       "Label": "Publish_DI/Publish (HandlerCount=10)",
       "Liaison": {
-        "MeanNs": 269.36,
-        "AllocatedBytes": 1104
+        "MeanNs": 50.46,
+        "AllocatedBytes": 0
       },
       "MediatR": {
-        "MeanNs": 240.67,
+        "MeanNs": 243.5,
         "AllocatedBytes": 1312
       },
-      "Speedup": 0.8934882684882683,
-      "AllocReductionPct": 15.85365853658537
+      "Speedup": 4.82560443915973,
+      "AllocReductionPct": 100
     },
     {
       "Label": "Publish_DI/Publish (HandlerCount=2)",
       "Liaison": {
-        "MeanNs": 127.54,
-        "AllocatedBytes": 336
+        "MeanNs": 40.7,
+        "AllocatedBytes": 0
       },
       "MediatR": {
-        "MeanNs": 97.4,
+        "MeanNs": 95.13,
         "AllocatedBytes": 352
       },
-      "Speedup": 0.7636819821232554,
-      "AllocReductionPct": 4.545454545454541
+      "Speedup": 2.337346437346437,
+      "AllocReductionPct": 100
     },
     {
       "Label": "Publish_DI/Publish (HandlerCount=5)",
       "Liaison": {
-        "MeanNs": 187.51,
-        "AllocatedBytes": 624
+        "MeanNs": 41.76,
+        "AllocatedBytes": 0
       },
       "MediatR": {
-        "MeanNs": 155.21,
+        "MeanNs": 158.21,
         "AllocatedBytes": 712
       },
-      "Speedup": 0.8277425203989122,
-      "AllocReductionPct": 12.35955056179775
+      "Speedup": 3.788553639846744,
+      "AllocReductionPct": 100
     },
     {
       "Label": "Send_DI/Send",
       "Liaison": {
-        "MeanNs": 156.84,
-        "AllocatedBytes": 440
+        "MeanNs": 79.37,
+        "AllocatedBytes": 240
       },
       "MediatR": {
-        "MeanNs": 94.81,
+        "MeanNs": 95.82,
         "AllocatedBytes": 312
       },
-      "Speedup": 0.604501402703392,
-      "AllocReductionPct": -41.025641025641036
+      "Speedup": 1.2072571500566964,
+      "AllocReductionPct": 23.076923076923073
     },
     {
       "Label": "Send_DI_Pipeline/Send (BehaviorCount=1)",
       "Liaison": {
-        "MeanNs": 183.4,
-        "AllocatedBytes": 576
+        "MeanNs": 130.1,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 136.2,
+        "MeanNs": 157.4,
         "AllocatedBytes": 448
       },
-      "Speedup": 0.7426390403489639,
-      "AllocReductionPct": -28.57142857142858
+      "Speedup": 1.2098385857033052,
+      "AllocReductionPct": 17.85714285714286
     },
     {
       "Label": "Send_DI_Pipeline/Send (BehaviorCount=2)",
       "Liaison": {
-        "MeanNs": 200,
-        "AllocatedBytes": 688
+        "MeanNs": 124.1,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 156.3,
+        "MeanNs": 156.2,
         "AllocatedBytes": 560
       },
-      "Speedup": 0.7815000000000001,
-      "AllocReductionPct": -22.857142857142865
+      "Speedup": 1.2586623690572118,
+      "AllocReductionPct": 34.285714285714285
     },
     {
       "Label": "Send_DI_Pipeline/Send (BehaviorCount=5)",
       "Liaison": {
-        "MeanNs": 240.4,
-        "AllocatedBytes": 1024
+        "MeanNs": 129.8,
+        "AllocatedBytes": 368
       },
       "MediatR": {
-        "MeanNs": 220.1,
+        "MeanNs": 215.7,
         "AllocatedBytes": 896
       },
-      "Speedup": 0.9155574043261231,
-      "AllocReductionPct": -14.28571428571428
+      "Speedup": 1.6617873651771955,
+      "AllocReductionPct": 58.92857142857143
     }
   ]
 }
