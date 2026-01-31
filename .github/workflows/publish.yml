@@ -12,6 +12,7 @@ on:
       - docs/**
       - .github/ISSUE_TEMPLATE/**
       - .github/PULL_REQUEST_TEMPLATE.md
+      - docs/roadmap.md
     tags: ['[0-9]+.[0-9]+.[0-9]+']      # stable builds (e.g., 1.2.3)
 
 permissions:
