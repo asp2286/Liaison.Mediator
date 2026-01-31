@@ -35,6 +35,13 @@ Liaison.Mediator is a lightweight mediator library for .NET that keeps the famil
 - Dispatch is by exact runtime type (no polymorphic/base-type fallback for requests or notifications).
 - No built-in complex ordering/priority policies for notification handlers (order is registration/container order).
 
+## Project Direction
+
+This project is intentionally opinionated.
+Liaison.Mediator prioritizes predictable behavior over feature parity.
+Future evolution and explicit non-goals are documented in the
+[Project Direction](docs/roadmap.md).
+
 ## Publish semantics
 
 - Current behavior (verified): `MediatorBuilder` publishes handlers sequentially, in the order they were registered; exceptions are fail-fast.
