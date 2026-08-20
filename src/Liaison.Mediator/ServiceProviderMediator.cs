@@ -404,16 +404,33 @@ internal sealed class ServiceProviderMediator : IMediator
         {
             if (handlers.Length == 1)
             {
-                return handlers[0].Handle(notification, cancellationToken);
+                return InvokeHandler(handlers[0], notification, cancellationToken);
             }
 
             var tasks = new Task[handlers.Length];
             for (var i = 0; i < handlers.Length; i++)
             {
-                tasks[i] = handlers[i].Handle(notification, cancellationToken);
+                tasks[i] = InvokeHandler(handlers[i], notification, cancellationToken);
             }
 
             return Task.WhenAll(tasks);
+        }
+
+        private static Task InvokeHandler(
+            INotificationHandler<TNotification> handler,
+            TNotification notification,
+            CancellationToken cancellationToken)
+        {
+            // A synchronous throw must not stop the remaining handlers from starting;
+            // it has to surface through the aggregate task like any other failure.
+            try
+            {
+                return handler.Handle(notification, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                return Task.FromException(exception);
+            }
         }
 
         private Task PublishWithPublisher(
