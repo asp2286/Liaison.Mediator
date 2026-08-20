@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Liaison.Mediator;
@@ -18,6 +19,7 @@ public static class MediatorServiceCollectionExtensions
     /// <param name="services">The service collection to configure.</param>
     /// <returns>The configured service collection.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is <see langword="null"/>.</exception>
+    [RequiresDynamicCode(ServiceProviderMediator.RequiresDynamicCodeMessage)]
     public static IServiceCollection AddMediator(this IServiceCollection services)
     {
         if (services is null)
@@ -46,6 +48,7 @@ public static class MediatorServiceCollectionExtensions
     /// <returns>The configured service collection.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> or <paramref name="assemblies"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="assemblies"/> does not contain any items.</exception>
+    [RequiresDynamicCode(ServiceProviderMediator.RequiresDynamicCodeMessage)]
     public static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] assemblies)
     {
         if (services is null)
