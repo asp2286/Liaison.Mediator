@@ -25,6 +25,9 @@ The following principles are considered non-negotiable and guide all future deci
 If a potential feature conflicts with these principles, it is likely not a good fit
 for this project.
 
+Decisions with lasting design consequences are recorded as ADRs;
+the trimming/AOT strategy is [ADR-001](adr/ADR-001-aot-strategy.md).
+
 ---
 
 ## Areas Under Consideration
