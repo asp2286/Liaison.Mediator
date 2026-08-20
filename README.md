@@ -96,7 +96,8 @@ services.AddScoped<INotificationHandler<TodoAdded>, TodoAddedHandler>();
 services.AddMediator();
 
 using ServiceProvider provider = services.BuildServiceProvider();
-IMediator mediator = provider.GetRequiredService<IMediator>();
+using IServiceScope scope = provider.CreateScope();
+IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
 var result = await mediator.Send(new AddTodo("Write docs"));
 await mediator.Publish(new TodoAdded(result.Id));

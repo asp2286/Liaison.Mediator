@@ -8,8 +8,9 @@ services.AddScoped<IRequestHandler<AddTodo, Todo>, AddTodoHandler>();
 services.AddScoped<INotificationHandler<TodoAdded>, TodoAddedHandler>();
 services.AddMediator();
 
-await using ServiceProvider provider = services.BuildServiceProvider();
-IMediator mediator = provider.GetRequiredService<IMediator>();
+await using ServiceProvider provider = services.BuildServiceProvider(validateScopes: true);
+using IServiceScope scope = provider.CreateScope();
+IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
 Todo todo = await mediator.Send(new AddTodo("Ship the release"));
 await mediator.Publish(new TodoAdded(todo.Id, todo.Title));
