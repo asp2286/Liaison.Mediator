@@ -23,39 +23,9 @@ and low-surprise for both maintainers and users.
 
 ## Commit message conventions
 
-Liaison.Mediator uses a lightweight commit convention to drive version bumps.
-
-### Version bump markers
-
-You may include **one of the following markers** in any commit message in your PR:
-
-- `[major]` — breaking change (API removal, incompatible behavior change)
-- `[minor]` — backward-compatible feature
-- *(no marker)* — patch, refactor, documentation, or internal change
-
-Only **one marker per PR is needed**.  
-If multiple commits contain markers, the highest-impact one wins:
-
-```
-[major] > [minor] > patch
-```
-
-Examples:
-
-```text
-[minor] Add explicit notification publisher abstraction
-```
-
-```text
-[major] Change Publish exception handling semantics
-```
-
-```text
-Refactor handler invocation cache
-```
-
-> The marker does **not** need to be in the last commit.  
-> All commits since the last stable tag are considered.
+Write clear, descriptive commit messages. Commit messages do **not** drive
+versioning: version selection happens exclusively through release tags
+(see below).
 
 ---
 
@@ -72,22 +42,21 @@ The tagged commit is published exactly as-is.
 
 ### Release candidates (RC)
 
-- Every push to `main` produces a prerelease:
-  ```
-  X.Y.Z-rc.N
-  ```
-- `X.Y.Z` is computed from commit markers since the last stable tag
-- `N` is the number of commits since the last stable tag
-- RC numbering resets automatically after each new stable release
+- Release candidates are published the same way as stable versions: push a
+  prerelease tag, for example `1.2.3-rc.1`.
+- The tag **is** the version — nothing is computed. RC numbering is chosen
+  by whoever tags.
+- A prerelease tag can point at any commit that contains this tag-driven
+  workflow (any commit on `main` after its introduction, or a feature branch
+  based on it), so a package can be validated before the branch merges.
+- Pushes to `main` do not publish anything.
 
 Example:
 
 ```
-1.0.0        ← stable tag
-1.0.1-rc.1
-1.0.1-rc.2
-...
-1.0.1        ← next stable tag
+1.1.0-rc.1   ← prerelease tag (on main or a feature branch); prerelease publish
+1.1.0-rc.2   ← another RC if needed
+1.1.0        ← stable tag; stable publish
 ```
 
 ---
@@ -132,8 +101,7 @@ Typical flow:
 ### Committing benchmark results
 
 - Benchmark artifacts and summaries **may be committed**
-- Changes under `benchmarks/**` and `README.md` **do not trigger package publishing**
-- Benchmark commits should **not** include version bump markers
+- Benchmark commits never trigger package publishing — only release tags do
 
 ---
 
@@ -144,7 +112,7 @@ Changes limited to:
 - `benchmarks/**`
 - `docs/**`
 
-do not affect versioning and should not include `[major]` or `[minor]` markers.
+do not affect versioning or trigger publishing.
 
 ---
 
