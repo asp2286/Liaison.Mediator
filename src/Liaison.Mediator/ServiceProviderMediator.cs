@@ -20,8 +20,12 @@ internal sealed class ServiceProviderMediator : IMediator
     private readonly INotificationPublisher _notificationPublisher;
     private readonly ConcurrentDictionary<Type, IRequestHandlerWrapper> _requestHandlerWrappers = new();
     private readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> _notificationHandlerWrappers = new();
-    private readonly Func<Type, IRequestHandlerWrapper> _createRequestHandlerWrapper;
-    private readonly Func<Type, INotificationHandlerWrapper> _createNotificationHandlerWrapper;
+
+    // Exactly one dispatch source is set, decided by the constructor: the reflection
+    // factories (legacy mode) or the dispatch table (table mode). The modes never mix.
+    private readonly Func<Type, IRequestHandlerWrapper>? _createRequestHandlerWrapper;
+    private readonly Func<Type, INotificationHandlerWrapper>? _createNotificationHandlerWrapper;
+    private readonly IMediatorDispatchTable? _dispatchTable;
 
     [RequiresDynamicCode(RequiresDynamicCodeMessage)]
     [UnconditionalSuppressMessage("Trimming", "IL2111:ReflectionToDynamicallyAccessedMembers",
@@ -38,6 +42,19 @@ internal sealed class ServiceProviderMediator : IMediator
         _createNotificationHandlerWrapper = CreateNotificationHandlerWrapper;
     }
 
+    // Internal on purpose: the container's constructor selection only considers public
+    // constructors, so registering the type directly can never silently pick table mode.
+    // This constructor is reachable exclusively through AddMediator(IMediatorDispatchTable).
+    internal ServiceProviderMediator(
+        IServiceProvider serviceProvider,
+        INotificationPublisher notificationPublisher,
+        IMediatorDispatchTable dispatchTable)
+    {
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _notificationPublisher = notificationPublisher ?? throw new ArgumentNullException(nameof(notificationPublisher));
+        _dispatchTable = dispatchTable ?? throw new ArgumentNullException(nameof(dispatchTable));
+    }
+
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         if (request is null)
@@ -46,7 +63,7 @@ internal sealed class ServiceProviderMediator : IMediator
         }
 
         var requestType = request.GetType();
-        var wrapper = _requestHandlerWrappers.GetOrAdd(requestType, _createRequestHandlerWrapper);
+        var wrapper = GetRequestHandlerWrapper(requestType);
         var responseTask = wrapper.Handle(request, cancellationToken);
         object? response;
         if (responseTask.Status == TaskStatus.RanToCompletion)
@@ -87,9 +104,67 @@ internal sealed class ServiceProviderMediator : IMediator
         }
 
         var notificationType = notification.GetType();
-        var wrapper = _notificationHandlerWrappers.GetOrAdd(notificationType, _createNotificationHandlerWrapper);
+        var wrapper = GetNotificationHandlerWrapper(notificationType);
 
         return wrapper.Handle(notification, cancellationToken);
+    }
+
+    private IRequestHandlerWrapper GetRequestHandlerWrapper(Type requestType)
+    {
+        if (_dispatchTable is null)
+        {
+            return _requestHandlerWrappers.GetOrAdd(requestType, _createRequestHandlerWrapper!);
+        }
+
+        if (_requestHandlerWrappers.TryGetValue(requestType, out var wrapper))
+        {
+            return wrapper;
+        }
+
+        var entry = _dispatchTable.FindRequestEntry(requestType)
+            ?? throw new InvalidOperationException(
+                $"Request type '{requestType.FullName}' has no entry in the mediator dispatch table. " +
+                "Table-based dispatch never falls back to reflection: rebuild the table so it covers this type " +
+                "(for source-generated tables, declare the type in the generating compilation or opt it in via " +
+                "the include attribute).");
+
+        return _requestHandlerWrappers.GetOrAdd(requestType, entry.CreateWrapper(_serviceProvider));
+    }
+
+    private INotificationHandlerWrapper GetNotificationHandlerWrapper(Type notificationType)
+    {
+        if (_dispatchTable is null)
+        {
+            return _notificationHandlerWrappers.GetOrAdd(notificationType, _createNotificationHandlerWrapper!);
+        }
+
+        if (_notificationHandlerWrappers.TryGetValue(notificationType, out var wrapper))
+        {
+            return wrapper;
+        }
+
+        var entry = _dispatchTable.FindNotificationEntry(notificationType)
+            ?? throw new InvalidOperationException(
+                $"Notification type '{notificationType.FullName}' has no entry in the mediator dispatch table. " +
+                "Table-based dispatch never falls back to reflection: rebuild the table so it covers this type " +
+                "(for source-generated tables, declare the type in the generating compilation or opt it in via " +
+                "the include attribute).");
+
+        return _notificationHandlerWrappers.GetOrAdd(notificationType, entry.CreateWrapper(_serviceProvider, _notificationPublisher));
+    }
+
+    internal static IRequestHandlerWrapper CreateRequestWrapper<TRequest, TResponse>(IServiceProvider serviceProvider)
+        where TRequest : IRequest<TResponse>
+    {
+        return new ServiceProviderRequestHandlerWrapper<TRequest, TResponse>(serviceProvider);
+    }
+
+    internal static INotificationHandlerWrapper CreateNotificationWrapper<TNotification>(
+        IServiceProvider serviceProvider,
+        INotificationPublisher notificationPublisher)
+        where TNotification : INotification
+    {
+        return new ServiceProviderNotificationHandlerWrapper<TNotification>(serviceProvider, notificationPublisher);
     }
 
     [RequiresDynamicCode(RequiresDynamicCodeMessage)]
