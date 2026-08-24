@@ -16,11 +16,17 @@ The following principles are considered non-negotiable and guide all future deci
 - Deterministic behavior by default
 - Minimal and intentional surface area
 - Trimming / AOT friendliness
-- No reflection-heavy or scanning-based behavior in the default path
+- No reflection-heavy or scanning-based behavior in the builder path
+  (DI-mode dispatch currently builds wrapper types via runtime reflection and
+  is annotated `[RequiresDynamicCode]`; assembly scanning stays an opt-in
+  overload marked `[RequiresUnreferencedCode]`)
 - Optional features must be opt-in and non-magical
 
 If a potential feature conflicts with these principles, it is likely not a good fit
 for this project.
+
+Decisions with lasting design consequences are recorded as ADRs;
+the trimming/AOT strategy is [ADR-001](adr/ADR-001-aot-strategy.md).
 
 ---
 
@@ -97,6 +103,8 @@ drop-in replacement for more feature-rich mediator frameworks.
 - Behavioral changes result in major version increments
 - Stable abstractions are expected to change rarely
 - Experimental ideas may live in separate packages or namespaces
+- The public dispatch surface stays `Task`-based throughout 1.x;
+  a move to `ValueTask` would be breaking and is only revisited at a potential 2.0
 
 ---
 

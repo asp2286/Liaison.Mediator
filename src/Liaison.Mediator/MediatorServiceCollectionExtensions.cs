@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Liaison.Mediator;
@@ -11,6 +12,9 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// </summary>
 public static class MediatorServiceCollectionExtensions
 {
+    private const string ScanningRequiresUnreferencedCodeMessage =
+        "Assembly scanning walks types via reflection; trimmed applications may have removed handler types or interfaces.";
+
     /// <summary>
     /// Registers the mediator with the service collection.
     /// Handlers and pipeline behaviors must already be registered in the container.
@@ -18,6 +22,7 @@ public static class MediatorServiceCollectionExtensions
     /// <param name="services">The service collection to configure.</param>
     /// <returns>The configured service collection.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> is <see langword="null"/>.</exception>
+    [RequiresDynamicCode(ServiceProviderMediator.RequiresDynamicCodeMessage)]
     public static IServiceCollection AddMediator(this IServiceCollection services)
     {
         if (services is null)
@@ -46,6 +51,8 @@ public static class MediatorServiceCollectionExtensions
     /// <returns>The configured service collection.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="services"/> or <paramref name="assemblies"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="assemblies"/> does not contain any items.</exception>
+    [RequiresUnreferencedCode(ScanningRequiresUnreferencedCodeMessage)]
+    [RequiresDynamicCode(ServiceProviderMediator.RequiresDynamicCodeMessage)]
     public static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] assemblies)
     {
         if (services is null)
@@ -74,6 +81,7 @@ public static class MediatorServiceCollectionExtensions
         return services.AddMediator();
     }
 
+    [RequiresUnreferencedCode(ScanningRequiresUnreferencedCodeMessage)]
     private static void RegisterHandlers(IServiceCollection services, IReadOnlyCollection<Assembly> assemblies)
     {
         foreach (var assembly in assemblies)
@@ -90,27 +98,36 @@ public static class MediatorServiceCollectionExtensions
                     continue;
                 }
 
-                foreach (var implementedInterface in type.ImplementedInterfaces)
-                {
-                    if (!implementedInterface.IsGenericType)
-                    {
-                        continue;
-                    }
-
-                    var interfaceType = implementedInterface.GetGenericTypeDefinition();
-                    if (interfaceType != typeof(IRequestHandler<,>) &&
-                        interfaceType != typeof(INotificationHandler<>) &&
-                        interfaceType != typeof(IPipelineBehavior<,>))
-                    {
-                        continue;
-                    }
-
-                    services.AddTransient(implementedInterface, type.AsType());
-                }
+                RegisterHandlerInterfaces(services, type.AsType());
             }
         }
     }
 
+    private static void RegisterHandlerInterfaces(
+        IServiceCollection services,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.PublicConstructors)]
+        Type implementationType)
+    {
+        foreach (var implementedInterface in implementationType.GetTypeInfo().ImplementedInterfaces)
+        {
+            if (!implementedInterface.IsGenericType)
+            {
+                continue;
+            }
+
+            var interfaceType = implementedInterface.GetGenericTypeDefinition();
+            if (interfaceType != typeof(IRequestHandler<,>) &&
+                interfaceType != typeof(INotificationHandler<>) &&
+                interfaceType != typeof(IPipelineBehavior<,>))
+            {
+                continue;
+            }
+
+            services.AddTransient(implementedInterface, implementationType);
+        }
+    }
+
+    [RequiresUnreferencedCode(ScanningRequiresUnreferencedCodeMessage)]
     private static IEnumerable<TypeInfo> GetDefinedTypes(Assembly assembly)
     {
         try

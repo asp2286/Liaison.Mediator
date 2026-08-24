@@ -21,7 +21,7 @@ Liaison.Mediator is a lightweight mediator library for .NET that keeps the famil
 - Explicit registration remains the default and recommended approach (`MediatorBuilder` or registering handlers in DI).
 - No required assembly scanning; scanning is provided only as an opt-in convenience overload.
 - Deterministic configuration (no hidden handler discovery).
-- Design intent: keep startup predictable and be more trimming/AOT-friendly by avoiding reflection-heavy discovery in the default path.
+- Keep startup predictable: builder mode uses no reflection and is CI-verified under Native AOT; DI-mode dispatch declares its runtime reflection explicitly via `[RequiresDynamicCode]`.
 
 ## When to prefer MediatR
 
@@ -53,7 +53,10 @@ Future evolution and explicit non-goals are documented in the
 
 - Target frameworks: `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`.
 - Nullable reference types: enabled.
-- Trimming/AOT: explicit registration avoids required scanning; the scanning overload uses reflection over assembly types (design intent, not a hard guarantee).
+- Trimming/AOT:
+  - Builder mode (`MediatorBuilder`): fully annotated, trim/AOT-analyzer clean, and verified under Native AOT by a CI smoke test.
+  - DI mode (`AddMediator()`): marked `[RequiresDynamicCode]` — dispatch builds closed generic wrapper types at runtime, so it is JIT-only today; source-generated registration is planned to make it AOT-clean.
+  - Assembly scanning (`AddMediator(params Assembly[])`): additionally marked `[RequiresUnreferencedCode]` — trimming may remove handler types the scan would otherwise discover.
 - Versioning: stable releases use semantic versions; breaking changes require a major version bump (see Release flow).
 
 ### Future: Abstractions-only package (idea)

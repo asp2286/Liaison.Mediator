@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -10,6 +11,11 @@ namespace Liaison.Mediator;
 
 internal sealed class ServiceProviderMediator : IMediator
 {
+    internal const string RequiresDynamicCodeMessage =
+        "The mediator's dependency-injection dispatch builds closed generic wrapper types at runtime. " +
+        "Use MediatorBuilder for Native AOT scenarios, or wait for the source-generated registration " +
+        "planned for a future release.";
+
     private readonly IServiceProvider _serviceProvider;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly ConcurrentDictionary<Type, IRequestHandlerWrapper> _requestHandlerWrappers = new();
@@ -17,6 +23,13 @@ internal sealed class ServiceProviderMediator : IMediator
     private readonly Func<Type, IRequestHandlerWrapper> _createRequestHandlerWrapper;
     private readonly Func<Type, INotificationHandlerWrapper> _createNotificationHandlerWrapper;
 
+    [RequiresDynamicCode(RequiresDynamicCodeMessage)]
+    [UnconditionalSuppressMessage("Trimming", "IL2111:ReflectionToDynamicallyAccessedMembers",
+        Justification = "The factory delegate is only ever invoked with request.GetType() of instances that are " +
+            "statically typed as IRequest<TResponse> at the Send call site, so the trimmer has already preserved " +
+            "the IRequest<> interface implementation the annotated parameter asks for. This holds only while " +
+            "CreateRequestHandlerWrapper inspects no interface other than IRequest<>; widening that inspection " +
+            "requires revisiting this suppression.")]
     public ServiceProviderMediator(IServiceProvider serviceProvider, INotificationPublisher notificationPublisher)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -79,7 +92,9 @@ internal sealed class ServiceProviderMediator : IMediator
         return wrapper.Handle(notification, cancellationToken);
     }
 
-    private IRequestHandlerWrapper CreateRequestHandlerWrapper(Type requestType)
+    [RequiresDynamicCode(RequiresDynamicCodeMessage)]
+    private IRequestHandlerWrapper CreateRequestHandlerWrapper(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type requestType)
     {
         var requestInterface = requestType
             .GetTypeInfo()
@@ -103,6 +118,7 @@ internal sealed class ServiceProviderMediator : IMediator
         return (IRequestHandlerWrapper)Activator.CreateInstance(wrapperType, _serviceProvider)!;
     }
 
+    [RequiresDynamicCode(RequiresDynamicCodeMessage)]
     private INotificationHandlerWrapper CreateNotificationHandlerWrapper(Type notificationType)
     {
         var wrapperType = typeof(ServiceProviderNotificationHandlerWrapper<>).MakeGenericType(notificationType);
