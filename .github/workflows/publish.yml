@@ -6,14 +6,13 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'          # stable builds (e.g., 1.2.3)
       - '[0-9]+.[0-9]+.[0-9]+-*'        # prerelease builds (e.g., 1.2.3-rc.1)
 
-permissions:
-  contents: read
-  id-token: write                       # keep if using NuGet Trusted Publishing (OIDC)
-
 jobs:
   pack_and_publish:
     runs-on: ubuntu-latest
     environment: nuget
+    permissions:
+      contents: write                   # create the GitHub Release for the tag
+      id-token: write                   # keep if using NuGet Trusted Publishing (OIDC)
     steps:
       - uses: actions/checkout@v4       # tag-triggered runs check out the tagged commit
       - uses: actions/setup-dotnet@v4
@@ -59,3 +58,24 @@ jobs:
 
       - name: Publish to nuget.org (Trusted Publishing)
         run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -e
+
+          # gh prepends --notes-file content to the --generate-notes changelog,
+          # so the release body is the NuGet link followed by generated notes.
+          printf '📦 NuGet: https://www.nuget.org/packages/Liaison.Mediator/%s\n\n' "$PKG_VERSION" > release-notes.md
+
+          FLAGS=(--title "Liaison.Mediator $PKG_VERSION" --verify-tag --generate-notes --notes-file release-notes.md)
+          if [[ "$PKG_VERSION" == *-* ]]; then
+            FLAGS+=(--prerelease)
+          fi
+
+          gh release create "$PKG_VERSION" \
+            "artifacts/Liaison.Mediator.$PKG_VERSION.nupkg" \
+            "artifacts/Liaison.Mediator.$PKG_VERSION.snupkg" \
+            "${FLAGS[@]}"
