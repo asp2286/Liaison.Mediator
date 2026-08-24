@@ -117,7 +117,8 @@ Each sample writes its output to the console so you can verify handler execution
 ## Release flow
 
 - **Stable** – Tag the desired commit with the semantic version (for example `1.2.3`) and push the tag to publish the exact build.
-- **Release candidates** – Every push to `main` emits `-rc.*` packages. Include `[minor]` or `[major]` in the commit message to bump the respective version component before the prerelease is generated.
+- **Release candidates** – Tag a prerelease version such as `1.2.3-rc.1` and push the tag; any commit that contains this tag-driven workflow qualifies (any commit on `main` after its introduction, or a feature branch based on it). The tag is the version; nothing is computed from commit messages.
+- Pushes to `main` do not publish packages.
 
 ## Project layout
 
